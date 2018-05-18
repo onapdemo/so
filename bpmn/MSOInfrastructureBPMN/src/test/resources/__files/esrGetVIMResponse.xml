@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cloud-region xmlns="http://org.openecomp.aai.inventory/v11">
+    <cloud-owner>ATT</cloud-owner>
+    <cloud-region-id>EastUS</cloud-region-id>
+    <cloud-type>azure</cloud-type>
+    <owner-defined-type>owner-defined-type</owner-defined-type>
+    <cloud-region-version>ocata</cloud-region-version>
+    <identity-url>http://msb-iag.onap-msb:80/api/multicloud-ocata/v0/windriver-huds-new_RegionOne/identity/v2.0</identity-url>
+    <cloud-zone>cloud zone</cloud-zone>
+    <complex-name>complex name</complex-name>
+    <sriov-automation>false</sriov-automation>
+    <cloud-extra-info>subscriberId</cloud-extra-info>
+    <resource-version>1522859629095</resource-version>
+    <esr-system-info-list>
+        <esr-system-info>
+            <esr-system-info-id>86ac350b-ebbc-4207-8f0f-bd997d2bb031</esr-system-info-id>
+            <service-url>http://10.247.134.108:5000/v3</service-url>
+            <user-name>user_name</user-name>
+            <password>P@ssword</password>
+            <system-type>VIM</system-type>
+            <ssl-insecure>true</ssl-insecure>
+            <cloud-domain>default</cloud-domain>
+            <default-tenant>alkac-haifa</default-tenant>
+            <resource-version>1522859628696</resource-version>
+        </esr-system-info>
+    </esr-system-info-list>
+</cloud-region>

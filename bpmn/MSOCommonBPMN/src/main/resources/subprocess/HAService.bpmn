@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="1.8.2">
+  <bpmn:error id="Error_0xpyi02" name="MSO Workflow Exception" errorCode="MSOWorkflowException" />
+  <bpmn:process id="HAService" name="HAService" isExecutable="true">
+    <bpmn:scriptTask id="Task_Preprocess" name="Preprocess" scriptFormat="groovy">
+      <bpmn:incoming>SequenceFlow_0hi7asr</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1o3es2w</bpmn:outgoing>
+      <bpmn:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+def HAService haService = new HAService()
+haService.preProcessRequest(execution)
+]]></bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:startEvent id="StartEvent_Start" name="Start">
+      <bpmn:outgoing>SequenceFlow_0hi7asr</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_callHAS" name="Call HAS">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">${HAS_Url}</camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="content-type">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">${HAS_Request}</camunda:inputParameter>
+            <camunda:outputParameter name="HAS_Response">${response}</camunda:outputParameter>
+            <camunda:outputParameter name="HAS_ResponseCode">${statusCode}</camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1o3es2w</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_14rdkxh</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="Task_logResponse" name="Log Response" scriptFormat="groovy">
+      <bpmn:incoming>SequenceFlow_14rdkxh</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1kkhfxv</bpmn:outgoing>
+      <bpmn:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+def HAService haService = new HAService()
+haService.logResponse(execution)]]></bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_15rg38f" default="SequenceFlow_badResponse">
+      <bpmn:incoming>SequenceFlow_1kkhfxv</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_accepted</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_badResponse</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="Task_badResponse" name="Set Bad Response&#10;&#10;Exception">
+      <bpmn:incoming>SequenceFlow_badResponse</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ju6uk9</bpmn:outgoing>
+      <bpmn:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+int responseCode = execution.getVariable("HAS_ResponseCode")
+String message = execution.getVariable("HAS_Response")
+
+ExceptionUtil exceptionUtil = new ExceptionUtil()
+exceptionUtil.buildAndThrowWorkflowException(execution, responseCode,   message)]]></bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="StartEvent_exceptionEnd" name="Exception">
+      <bpmn:incoming>SequenceFlow_0ju6uk9</bpmn:incoming>
+      <bpmn:errorEventDefinition errorRef="Error_0xpyi02" />
+    </bpmn:endEvent>
+    <bpmn:callActivity id="Task_receiveWorkflowMessage" name="Waiting for HAS Message" calledElement="ReceiveWorkflowMessage">
+      <bpmn:extensionElements>
+        <camunda:in source="HAS_timeout" target="RCVWFMSG_timeout" />
+        <camunda:in source="HAS_messageType" target="RCVWFMSG_messageType" />
+        <camunda:in source="HAS_correlator" target="RCVWFMSG_correlator" />
+        <camunda:out source="WorkflowResponse" target="WorkflowResponse" />
+        <camunda:out source="WorkflowException" target="WorkflowException" />
+        <camunda:in source="isDebugLogEnabled" target="isDebugLogEnabled" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_accepted</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1iijy7d</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:scriptTask id="Task_postSuccess" name="Post Success" scriptFormat="groovy">
+      <bpmn:incoming>SequenceFlow_1iijy7d</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_13x9g8k</bpmn:outgoing>
+      <bpmn:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+def HAService haService = new HAService()
+haService.postSuccess(execution)]]></bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="StartEvent_end" name="End">
+      <bpmn:incoming>SequenceFlow_13x9g8k</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0hi7asr" sourceRef="StartEvent_Start" targetRef="Task_Preprocess" />
+    <bpmn:sequenceFlow id="SequenceFlow_1o3es2w" sourceRef="Task_Preprocess" targetRef="Task_callHAS" />
+    <bpmn:sequenceFlow id="SequenceFlow_14rdkxh" sourceRef="Task_callHAS" targetRef="Task_logResponse" />
+    <bpmn:sequenceFlow id="SequenceFlow_1kkhfxv" sourceRef="Task_logResponse" targetRef="ExclusiveGateway_15rg38f" />
+    <bpmn:sequenceFlow id="SequenceFlow_accepted" name="OK, Accepted" sourceRef="ExclusiveGateway_15rg38f" targetRef="Task_receiveWorkflowMessage">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression"><![CDATA[#{execution.getVariable("HAS_ResponseCode")=='202'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_badResponse" name="Bad Synchronous Response" sourceRef="ExclusiveGateway_15rg38f" targetRef="Task_badResponse" />
+    <bpmn:sequenceFlow id="SequenceFlow_0ju6uk9" sourceRef="Task_badResponse" targetRef="StartEvent_exceptionEnd" />
+    <bpmn:sequenceFlow id="SequenceFlow_1iijy7d" sourceRef="Task_receiveWorkflowMessage" targetRef="Task_postSuccess" />
+    <bpmn:sequenceFlow id="SequenceFlow_13x9g8k" sourceRef="Task_postSuccess" targetRef="StartEvent_end" />
+    <bpmn:subProcess id="SubProcess_0qpfu5n" name="Error Handling" triggeredByEvent="true">
+      <bpmn:scriptTask id="ScriptTask_16jrkqv" name="Process Errors" scriptFormat="groovy">
+        <bpmn:incoming>SequenceFlow_13kdyr5</bpmn:incoming>
+        <bpmn:outgoing>SequenceFlow_1m8f8es</bpmn:outgoing>
+        <bpmn:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+def exUtil = new ExceptionUtil()
+exUtil.processSubflowsBPMNException(execution)]]></bpmn:script>
+      </bpmn:scriptTask>
+      <bpmn:endEvent id="EndEvent_errorEnd" name="End">
+        <bpmn:incoming>SequenceFlow_1m8f8es</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:startEvent id="StartEvent_errorStart" name="Error Start">
+        <bpmn:outgoing>SequenceFlow_13kdyr5</bpmn:outgoing>
+        <bpmn:errorEventDefinition errorRef="Error_0xpyi02" />
+      </bpmn:startEvent>
+      <bpmn:sequenceFlow id="SequenceFlow_13kdyr5" sourceRef="StartEvent_errorStart" targetRef="ScriptTask_16jrkqv" />
+      <bpmn:sequenceFlow id="SequenceFlow_1m8f8es" sourceRef="ScriptTask_16jrkqv" targetRef="EndEvent_errorEnd" />
+    </bpmn:subProcess>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="HAService">
+      <bpmndi:BPMNShape id="ScriptTask_1ayc6j8_di" bpmnElement="Task_Preprocess">
+        <dc:Bounds x="352" y="92" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_Start">
+        <dc:Bounds x="221" y="114" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="227" y="150" width="24" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0n65nhz_di" bpmnElement="Task_callHAS">
+        <dc:Bounds x="537" y="92" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_014rxk1_di" bpmnElement="Task_logResponse">
+        <dc:Bounds x="758" y="92" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_15rg38f_di" bpmnElement="ExclusiveGateway_15rg38f" isMarkerVisible="true">
+        <dc:Bounds x="976" y="107" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1001" y="160" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_1bjvyj2_di" bpmnElement="Task_badResponse">
+        <dc:Bounds x="1084" y="-89" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1opwm4y_di" bpmnElement="StartEvent_exceptionEnd">
+        <dc:Bounds x="1280" y="-67" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1216" y="-42" width="49" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_1s6u68c_di" bpmnElement="Task_receiveWorkflowMessage">
+        <dc:Bounds x="1182" y="92" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_0hmathb_di" bpmnElement="Task_postSuccess">
+        <dc:Bounds x="1406" y="92" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_14ej27n_di" bpmnElement="StartEvent_end">
+        <dc:Bounds x="1609" y="114" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1617" y="153" width="20" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0hi7asr_di" bpmnElement="SequenceFlow_0hi7asr">
+        <di:waypoint xsi:type="dc:Point" x="257" y="132" />
+        <di:waypoint xsi:type="dc:Point" x="311" y="132" />
+        <di:waypoint xsi:type="dc:Point" x="311" y="132" />
+        <di:waypoint xsi:type="dc:Point" x="352" y="132" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="326" y="125.5" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1o3es2w_di" bpmnElement="SequenceFlow_1o3es2w">
+        <di:waypoint xsi:type="dc:Point" x="452" y="132" />
+        <di:waypoint xsi:type="dc:Point" x="537" y="132" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="494.5" y="110.5" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_14rdkxh_di" bpmnElement="SequenceFlow_14rdkxh">
+        <di:waypoint xsi:type="dc:Point" x="637" y="132" />
+        <di:waypoint xsi:type="dc:Point" x="758" y="132" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="697.5" y="110.5" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1kkhfxv_di" bpmnElement="SequenceFlow_1kkhfxv">
+        <di:waypoint xsi:type="dc:Point" x="858" y="132" />
+        <di:waypoint xsi:type="dc:Point" x="976" y="132" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="917" y="110" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1pc1yrk_di" bpmnElement="SequenceFlow_accepted">
+        <di:waypoint xsi:type="dc:Point" x="1026" y="132" />
+        <di:waypoint xsi:type="dc:Point" x="1182" y="132" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1073" y="110" width="68" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1iijy7d_di" bpmnElement="SequenceFlow_1iijy7d">
+        <di:waypoint xsi:type="dc:Point" x="1282" y="132" />
+        <di:waypoint xsi:type="dc:Point" x="1406" y="132" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1344" y="110.5" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0kq51cu_di" bpmnElement="SequenceFlow_badResponse">
+        <di:waypoint xsi:type="dc:Point" x="1001" y="107" />
+        <di:waypoint xsi:type="dc:Point" x="1001" y="-49" />
+        <di:waypoint xsi:type="dc:Point" x="1084" y="-49" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="911" y="-12" width="87" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ju6uk9_di" bpmnElement="SequenceFlow_0ju6uk9">
+        <di:waypoint xsi:type="dc:Point" x="1184" y="-49" />
+        <di:waypoint xsi:type="dc:Point" x="1280" y="-49" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1232" y="-71" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_13x9g8k_di" bpmnElement="SequenceFlow_13x9g8k">
+        <di:waypoint xsi:type="dc:Point" x="1506" y="132" />
+        <di:waypoint xsi:type="dc:Point" x="1609" y="132" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1557.5" y="110" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="SubProcess_0qpfu5n_di" bpmnElement="SubProcess_0qpfu5n" isExpanded="true">
+        <dc:Bounds x="826" y="282" width="350" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_16jrkqv_di" bpmnElement="ScriptTask_16jrkqv">
+        <dc:Bounds x="948" y="345" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0mr10lf_di" bpmnElement="EndEvent_errorEnd">
+        <dc:Bounds x="1107" y="367" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1070" y="406" width="20" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_0nfbjjb_di" bpmnElement="StartEvent_errorStart">
+        <dc:Bounds x="847" y="367" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="840" y="405" width="51" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_13kdyr5_di" bpmnElement="SequenceFlow_13kdyr5">
+        <di:waypoint xsi:type="dc:Point" x="883" y="385" />
+        <di:waypoint xsi:type="dc:Point" x="948" y="385" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="871.5" y="364" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1m8f8es_di" bpmnElement="SequenceFlow_1m8f8es">
+        <di:waypoint xsi:type="dc:Point" x="1048" y="385" />
+        <di:waypoint xsi:type="dc:Point" x="1107" y="385" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1033.5" y="364" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

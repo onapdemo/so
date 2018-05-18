@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="_GraPIIyxEeWmdMDkx6Uftw" targetNamespace="http://camunda.org/schema/1.0/bpmn" exporter="Camunda Modeler" exporterVersion="1.8.2" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process id="MultiVimAdapter" name="MultiVimAdapter&#10;" isExecutable="true">
+    <bpmn2:subProcess id="SubProcess_1" name="Error Handling Sub Process" triggeredByEvent="true">
+      <bpmn2:scriptTask id="ScriptTask_8" name="Process Error" scriptFormat="groovy">
+        <bpmn2:incoming>SequenceFlow_4</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_5</bpmn2:outgoing>
+        <bpmn2:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+def exUtil = new ExceptionUtil()
+exUtil.processSubflowsBPMNException(execution)
+]]></bpmn2:script>
+      </bpmn2:scriptTask>
+      <bpmn2:sequenceFlow id="SequenceFlow_5" name="" sourceRef="ScriptTask_8" targetRef="EndEvent_1" />
+      <bpmn2:endEvent id="EndEvent_1">
+        <bpmn2:incoming>SequenceFlow_5</bpmn2:incoming>
+      </bpmn2:endEvent>
+      <bpmn2:startEvent id="StartEvent_2">
+        <bpmn2:outgoing>SequenceFlow_4</bpmn2:outgoing>
+        <bpmn2:errorEventDefinition id="_ErrorEventDefinition_89" />
+      </bpmn2:startEvent>
+      <bpmn2:sequenceFlow id="SequenceFlow_4" name="" sourceRef="StartEvent_2" targetRef="ScriptTask_8" />
+    </bpmn2:subProcess>
+    <bpmn2:scriptTask id="PreProcessRequest" name="Pre-Process Request" scriptFormat="groovy">
+      <bpmn2:incoming>SequenceFlow_</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+def multiVimAdapter = new MultiVimAdapter()
+multiVimAdapter.preProcessRequest(execution)
+]]></bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:sequenceFlow id="SequenceFlow_2" name="" sourceRef="PreProcessRequest" targetRef="InvokeMultiVimAdapter" />
+    <bpmn2:startEvent id="StartEventMultiVim" name="Start">
+      <bpmn2:outgoing>SequenceFlow_</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_" name="" sourceRef="StartEventMultiVim" targetRef="PreProcessRequest" />
+    <bpmn2:sequenceFlow id="SequenceFlow_02zug1b" sourceRef="InvokeMultiVimAdapter" targetRef="Task_08f6bq6" />
+    <bpmn2:serviceTask id="InvokeMultiVimAdapter" name="Send Request to MultiVm Adapter">
+      <bpmn2:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url"><![CDATA[${MVIMREST_multiVimAdapterUrl}
+]]></camunda:inputParameter>
+            <camunda:inputParameter name="method"><![CDATA[POST
+]]></camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="content-type">application/xml</camunda:entry>
+                <camunda:entry key="Authorization">#{MVIMREST_basicAuthHeaderValue}</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload"><![CDATA[${MVIMREST_multiVimAdapterRequest}
+]]></camunda:inputParameter>
+            <camunda:outputParameter name="MVIMREST_Response">${response}</camunda:outputParameter>
+            <camunda:outputParameter name="MVIMREST_ResponseCode">${statusCode}</camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_2</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_02zug1b</bpmn2:outgoing>
+    </bpmn2:serviceTask>
+    <bpmn2:exclusiveGateway id="isResponseOk" name="is Response Ok?" default="badSynchronousResponse_1">
+      <bpmn2:incoming>SequenceFlow_0u4t5vn</bpmn2:incoming>
+      <bpmn2:outgoing>badSynchronousResponse_1</bpmn2:outgoing>
+      <bpmn2:outgoing>SequenceFlow_1p354yi</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+    <bpmn2:scriptTask id="BadResponseFromMultiVimAdapter" name="Set Bad Response&#10;&#10;Exception" scriptFormat="groovy">
+      <bpmn2:incoming>badSynchronousResponse_1</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_0ogxs8t</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+int responseCode = execution.getVariable("MVIMREST_ResponseCode")
+String message = execution.getVariable("MVIMREST_Response")
+
+ExceptionUtil exceptionUtil = new ExceptionUtil()
+exceptionUtil.buildAndThrowWorkflowException(execution, responseCode,   message)]]></bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:endEvent id="messageReceived" name="Message Received">
+      <bpmn2:incoming>SequenceFlow_0ogxs8t</bpmn2:incoming>
+      <bpmn2:errorEventDefinition errorRef="Error_1" />
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="badSynchronousResponse_1" name="Bad synchronous response" sourceRef="isResponseOk" targetRef="BadResponseFromMultiVimAdapter" />
+    <bpmn2:sequenceFlow id="SequenceFlow_0ogxs8t" name="Exception" sourceRef="BadResponseFromMultiVimAdapter" targetRef="messageReceived" />
+    <bpmn2:sequenceFlow id="SequenceFlow_1p354yi" sourceRef="isResponseOk" targetRef="ReceiveWorkflowMessage">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression"><![CDATA[#{execution.getVariable("MVIMREST_ResponseCode")=='202'}]]></bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:scriptTask id="PostSuccessStatus" name="Post Success Status" scriptFormat="groovy">
+      <bpmn2:incoming>SequenceFlow_0uxbudt</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_1j39nvd</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+def multiVimAdapter= new MultiVimAdapter()
+multiVimAdapter.postSuccessStatus(execution)]]></bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:endEvent id="EndEvent_11gvb4d" name="End">
+      <bpmn2:incoming>SequenceFlow_1j39nvd</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_1j39nvd" sourceRef="PostSuccessStatus" targetRef="EndEvent_11gvb4d" />
+    <bpmn2:sequenceFlow id="SequenceFlow_0u4t5vn" sourceRef="Task_08f6bq6" targetRef="isResponseOk" />
+    <bpmn2:scriptTask id="Task_08f6bq6" name="Log Response" scriptFormat="groovy">
+      <bpmn2:incoming>SequenceFlow_02zug1b</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_0u4t5vn</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+def multiVimAdapter = new MultiVimAdapter()
+multiVimAdapter.logResponse(execution)
+]]></bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:sequenceFlow id="SequenceFlow_0uxbudt" sourceRef="ReceiveWorkflowMessage" targetRef="PostSuccessStatus" />
+    <bpmn2:callActivity id="ReceiveWorkflowMessage" name="Waiting to Receive Workflow Message" calledElement="ReceiveWorkflowMessage">
+      <bpmn2:extensionElements>
+        <camunda:in source="MVIMREST_timeout" target="RCVWFMSG_timeout" />
+        <camunda:in source="MVIMREST_messageType" target="RCVWFMSG_messageType" />
+        <camunda:in source="MVIMREST_correlator" target="RCVWFMSG_correlator" />
+        <camunda:out source="WorkflowResponse" target="NotificationResponse" />
+        <camunda:out source="WorkflowException" target="WorkflowException" />
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_1p354yi</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_0uxbudt</bpmn2:outgoing>
+    </bpmn2:callActivity>
+  </bpmn2:process>
+  <bpmn2:error id="Error_1" name="MSO Workflow Exception" errorCode="MSOWorkflowException" />
+  <bpmn2:message id="Message_1" name="WorkflowMessage" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="MultiVimAdapter">
+      <bpmndi:BPMNShape id="_BPMNShape_ScriptTask_56" bpmnElement="PreProcessRequest">
+        <dc:Bounds x="204" y="148" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_54" bpmnElement="StartEventMultiVim">
+        <dc:Bounds x="84" y="170" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="90" y="211" width="24" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_2" bpmnElement="SequenceFlow_" sourceElement="_BPMNShape_StartEvent_54" targetElement="_BPMNShape_ScriptTask_56">
+        <di:waypoint xsi:type="dc:Point" x="120" y="188" />
+        <di:waypoint xsi:type="dc:Point" x="204" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="130" y="188" width="6" height="6" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_3" bpmnElement="SequenceFlow_2" sourceElement="_BPMNShape_ScriptTask_56" targetElement="ServiceTask_0s165z3_di">
+        <di:waypoint xsi:type="dc:Point" x="304" y="188" />
+        <di:waypoint xsi:type="dc:Point" x="374" y="187" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="294" y="169.5" width="90" height="6" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_SubProcess_24" bpmnElement="SubProcess_1" isExpanded="true">
+        <dc:Bounds x="180" y="322" width="600" height="181" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_66" bpmnElement="StartEvent_2">
+        <dc:Bounds x="225" y="395" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="198" y="436" width="90" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_EndEvent_207" bpmnElement="EndEvent_1">
+        <dc:Bounds x="477" y="395" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="450" y="436" width="90" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_ScriptTask_266" bpmnElement="ScriptTask_8">
+        <dc:Bounds x="323" y="371" width="97" height="83" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_5" bpmnElement="SequenceFlow_4" sourceElement="_BPMNShape_StartEvent_66" targetElement="_BPMNShape_ScriptTask_266">
+        <di:waypoint xsi:type="dc:Point" x="261" y="413" />
+        <di:waypoint xsi:type="dc:Point" x="323" y="412" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="231" y="413" width="90" height="6" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_6" bpmnElement="SequenceFlow_5" sourceElement="_BPMNShape_ScriptTask_266" targetElement="_BPMNShape_EndEvent_207">
+        <di:waypoint xsi:type="dc:Point" x="419" y="412" />
+        <di:waypoint xsi:type="dc:Point" x="477" y="413" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="403" y="413" width="90" height="6" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_02zug1b_di" bpmnElement="SequenceFlow_02zug1b">
+        <di:waypoint xsi:type="dc:Point" x="474" y="188" />
+        <di:waypoint xsi:type="dc:Point" x="550" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="467" y="167" width="90" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0s165z3_di" bpmnElement="InvokeMultiVimAdapter">
+        <dc:Bounds x="374" y="148" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0bunzu8_di" bpmnElement="isResponseOk" isMarkerVisible="true">
+        <dc:Bounds x="744" y="163" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="808" y="168" width="84" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_0s9m4s7_di" bpmnElement="BadResponseFromMultiVimAdapter">
+        <dc:Bounds x="828" y="-46" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1f5crxg_di" bpmnElement="messageReceived">
+        <dc:Bounds x="990" y="-24" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1121" y="156" width="46" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0up6bxi_di" bpmnElement="badSynchronousResponse_1">
+        <di:waypoint xsi:type="dc:Point" x="769" y="163" />
+        <di:waypoint xsi:type="dc:Point" x="769" y="-6" />
+        <di:waypoint xsi:type="dc:Point" x="828" y="-6" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="715" y="-38" width="85" height="25" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ogxs8t_di" bpmnElement="SequenceFlow_0ogxs8t">
+        <di:waypoint xsi:type="dc:Point" x="928" y="-6" />
+        <di:waypoint xsi:type="dc:Point" x="990" y="-6" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="936" y="-29" width="49" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1p354yi_di" bpmnElement="SequenceFlow_1p354yi">
+        <di:waypoint xsi:type="dc:Point" x="794" y="188" />
+        <di:waypoint xsi:type="dc:Point" x="958" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="831" y="166.5" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_15548pk_di" bpmnElement="PostSuccessStatus">
+        <dc:Bounds x="1236" y="148" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_11gvb4d_di" bpmnElement="EndEvent_11gvb4d">
+        <dc:Bounds x="1427" y="170" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1436" y="206" width="20" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1j39nvd_di" bpmnElement="SequenceFlow_1j39nvd">
+        <di:waypoint xsi:type="dc:Point" x="1336" y="188" />
+        <di:waypoint xsi:type="dc:Point" x="1427" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1336.5" y="166.5" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0u4t5vn_di" bpmnElement="SequenceFlow_0u4t5vn">
+        <di:waypoint xsi:type="dc:Point" x="650" y="188" />
+        <di:waypoint xsi:type="dc:Point" x="744" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="697" y="166.5" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_048ley9_di" bpmnElement="Task_08f6bq6">
+        <dc:Bounds x="550" y="148" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0uxbudt_di" bpmnElement="SequenceFlow_0uxbudt">
+        <di:waypoint xsi:type="dc:Point" x="1058" y="188" />
+        <di:waypoint xsi:type="dc:Point" x="1236" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1147" y="166.5" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="CallActivity_16qaw0a_di" bpmnElement="ReceiveWorkflowMessage">
+        <dc:Bounds x="958" y="148" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

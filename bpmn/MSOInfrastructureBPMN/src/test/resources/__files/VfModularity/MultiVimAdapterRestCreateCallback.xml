@@ -1,0 +1,27 @@
+<CreateVfModuleMultiVimResponse>
+<vfModuleCreated>true</vfModuleCreated>
+<vfModuleOutputs>
+<entry>
+<key>execution_id</key>
+<value>10</value>
+</entry>
+<entry>
+<key>service_template_name</key>
+<value>test15-template</value>
+</entry>
+<entry>
+<key>workflow_name</key>
+<value>start</value>
+</entry>
+<entry>
+<key>service_name</key>
+<value>test15</value>
+</entry>
+<entry>
+<key>status</key>
+<value>started</value>
+</entry>
+</vfModuleOutputs>
+<vfModuleStackId>10</vfModuleStackId>   <!-- execution ID which can be used for polling-->
+<vnfId>test16</vnfId>
+</CreateVfModuleMultiVimResponse>

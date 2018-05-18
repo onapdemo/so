@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="_GraPIIyxEeWmdMDkx6Uftw" targetNamespace="http://camunda.org/schema/1.0/bpmn" exporter="Camunda Modeler" exporterVersion="1.8.2" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <bpmn2:process id="ESRGetVimById" name="ESRGetVimById&#10;" isExecutable="true">
+    <bpmn2:scriptTask id="ScriptTask_PreProcessRequest" name="Pre Process Request" scriptFormat="groovy">
+      <bpmn2:incoming>SequenceFlow_1agn766</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_0oucdmo</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+def ESRGetVimById esrGetVimById = new ESRGetVimById()
+esrGetVimById.preProcessRequest(execution)]]></bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:sequenceFlow id="SequenceFlow_0oucdmo" sourceRef="ScriptTask_PreProcessRequest" targetRef="Task_QueryESR" />
+    <bpmn2:startEvent id="StartEvent_0pkzcnl" name="Start">
+      <bpmn2:outgoing>SequenceFlow_1agn766</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_1agn766" sourceRef="StartEvent_0pkzcnl" targetRef="ScriptTask_PreProcessRequest" />
+    <bpmn2:sequenceFlow id="SequenceFlow_0hzwxds" sourceRef="Task_postSuccess" targetRef="EndEvent_Complete" />
+    <bpmn2:scriptTask id="Task_postSuccess" name="Post Success" scriptFormat="groovy">
+      <bpmn2:incoming>SequenceFlow_0vszzli</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_0hzwxds</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+def ESRGetVimById esrGetVimById = new ESRGetVimById()
+esrGetVimById.postSuccessStatus(execution)]]></bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:sequenceFlow id="SequenceFlow_19q3eab" sourceRef="Task_QueryESR" targetRef="ExclusiveGateway_1ab97in" />
+    <bpmn2:scriptTask id="Task_QueryESR" name="Query ESR&#10;" scriptFormat="groovy">
+      <bpmn2:incoming>SequenceFlow_0oucdmo</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_19q3eab</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+def ESRGetVimById esrGetVimById = new ESRGetVimById()
+esrGetVimById.queryESR(execution)]]></bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:exclusiveGateway id="ExclusiveGateway_1ab97in" default="SequenceFlow_0ba747m">
+      <bpmn2:incoming>SequenceFlow_19q3eab</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_0vszzli</bpmn2:outgoing>
+      <bpmn2:outgoing>SequenceFlow_0ba747m</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+    <bpmn2:sequenceFlow id="SequenceFlow_0vszzli" name="OK 200" sourceRef="ExclusiveGateway_1ab97in" targetRef="Task_postSuccess">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression"><![CDATA[#{execution.getVariable("ESRGETVIM_ResponseCode")=='200'}]]></bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
+    <bpmn2:scriptTask id="Task_ErroneousResponse" name="Erroneous Response&#10;Throw Exception" scriptFormat="groovy">
+      <bpmn2:incoming>SequenceFlow_0ba747m</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_00beuz9</bpmn2:outgoing>
+      <bpmn2:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+
+int responseCode = execution.getVariable("ESRGETVIM_ResponseCode")
+String message = execution.getVariable("ESRGETVIM_Response")
+
+ExceptionUtil exceptionUtil = new ExceptionUtil()
+exceptionUtil.buildAndThrowWorkflowException(execution, responseCode,   message)]]></bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:sequenceFlow id="SequenceFlow_0ba747m" sourceRef="ExclusiveGateway_1ab97in" targetRef="Task_ErroneousResponse" />
+    <bpmn2:subProcess id="SubProcess_ErrorHandling" name="Error Handling" triggeredByEvent="true">
+      <bpmn2:scriptTask id="Task_ProcessErrors" name="Process Errors" scriptFormat="groovy">
+        <bpmn2:incoming>SequenceFlow_0s1fhka</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_0x7yff9</bpmn2:outgoing>
+        <bpmn2:script><![CDATA[import org.openecomp.mso.bpmn.common.scripts.*
+def exUtil = new ExceptionUtil()
+exUtil.processSubflowsBPMNException(execution)]]></bpmn2:script>
+      </bpmn2:scriptTask>
+      <bpmn2:endEvent id="EndEvent_1akq0yg">
+        <bpmn2:incoming>SequenceFlow_0x7yff9</bpmn2:incoming>
+      </bpmn2:endEvent>
+      <bpmn2:sequenceFlow id="SequenceFlow_0x7yff9" sourceRef="Task_ProcessErrors" targetRef="EndEvent_1akq0yg" />
+      <bpmn2:startEvent id="EndEvent_ErrorStart" name="Error Start">
+        <bpmn2:outgoing>SequenceFlow_0s1fhka</bpmn2:outgoing>
+        <bpmn2:errorEventDefinition />
+      </bpmn2:startEvent>
+      <bpmn2:sequenceFlow id="SequenceFlow_0s1fhka" sourceRef="EndEvent_ErrorStart" targetRef="Task_ProcessErrors" />
+    </bpmn2:subProcess>
+    <bpmn2:endEvent id="EndEvent_Complete" name="Complete">
+      <bpmn2:incoming>SequenceFlow_0hzwxds</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:endEvent id="EndEvent_1d4ohv1" name="Error">
+      <bpmn2:incoming>SequenceFlow_00beuz9</bpmn2:incoming>
+      <bpmn2:errorEventDefinition errorRef="Error_1" />
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_00beuz9" sourceRef="Task_ErroneousResponse" targetRef="EndEvent_1d4ohv1" />
+  </bpmn2:process>
+  <bpmn2:error id="Error_1" name="MSO Workflow Exception" errorCode="MSOWorkflowException" />
+  <bpmn2:message id="Message_1" name="WorkflowMessage" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ESRGetVimById">
+      <bpmndi:BPMNShape id="ScriptTask_0mmbl38_di" bpmnElement="ScriptTask_PreProcessRequest">
+        <dc:Bounds x="864" y="274" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0oucdmo_di" bpmnElement="SequenceFlow_0oucdmo">
+        <di:waypoint xsi:type="dc:Point" x="964" y="314" />
+        <di:waypoint xsi:type="dc:Point" x="1002" y="314" />
+        <di:waypoint xsi:type="dc:Point" x="1002" y="314" />
+        <di:waypoint xsi:type="dc:Point" x="1041" y="314" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="972" y="307.5" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="StartEvent_0pkzcnl_di" bpmnElement="StartEvent_0pkzcnl">
+        <dc:Bounds x="756" y="296" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="763" y="332" width="24" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1agn766_di" bpmnElement="SequenceFlow_1agn766">
+        <di:waypoint xsi:type="dc:Point" x="792" y="314" />
+        <di:waypoint xsi:type="dc:Point" x="864" y="314" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="783" y="292.5" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0hzwxds_di" bpmnElement="SequenceFlow_0hzwxds">
+        <di:waypoint xsi:type="dc:Point" x="1478" y="314" />
+        <di:waypoint xsi:type="dc:Point" x="1616" y="314" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1502" y="293" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_0d1l6sk_di" bpmnElement="Task_postSuccess">
+        <dc:Bounds x="1378" y="274" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_19q3eab_di" bpmnElement="SequenceFlow_19q3eab">
+        <di:waypoint xsi:type="dc:Point" x="1141" y="314" />
+        <di:waypoint xsi:type="dc:Point" x="1210" y="314" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1131" y="293" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_128m7we_di" bpmnElement="Task_QueryESR">
+        <dc:Bounds x="1041" y="274" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1ab97in_di" bpmnElement="ExclusiveGateway_1ab97in" isMarkerVisible="true">
+        <dc:Bounds x="1210" y="289" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1190" y="342" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0vszzli_di" bpmnElement="SequenceFlow_0vszzli">
+        <di:waypoint xsi:type="dc:Point" x="1260" y="314" />
+        <di:waypoint xsi:type="dc:Point" x="1378" y="314" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1301" y="293" width="38" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_0dhg6i2_di" bpmnElement="Task_ErroneousResponse">
+        <dc:Bounds x="1299" y="54" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ba747m_di" bpmnElement="SequenceFlow_0ba747m">
+        <di:waypoint xsi:type="dc:Point" x="1235" y="289" />
+        <di:waypoint xsi:type="dc:Point" x="1235" y="94" />
+        <di:waypoint xsi:type="dc:Point" x="1299" y="94" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1205" y="185" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="SubProcess_0dgkvmq_di" bpmnElement="SubProcess_ErrorHandling" isExpanded="true">
+        <dc:Bounds x="1060" y="418" width="350" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_0lsukjn_di" bpmnElement="Task_ProcessErrors">
+        <dc:Bounds x="1182" y="481" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1akq0yg_di" bpmnElement="EndEvent_1akq0yg">
+        <dc:Bounds x="1341" y="503" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1314" y="542" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0x7yff9_di" bpmnElement="SequenceFlow_0x7yff9">
+        <di:waypoint xsi:type="dc:Point" x="1282" y="521" />
+        <di:waypoint xsi:type="dc:Point" x="1341" y="521" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1267" y="500" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="StartEvent_0hj0ldt_di" bpmnElement="EndEvent_ErrorStart">
+        <dc:Bounds x="1081" y="503" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1074" y="541" width="51" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0s1fhka_di" bpmnElement="SequenceFlow_0s1fhka">
+        <di:waypoint xsi:type="dc:Point" x="1117" y="521" />
+        <di:waypoint xsi:type="dc:Point" x="1182" y="521" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1105" y="500" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_1i8nllu_di" bpmnElement="EndEvent_Complete">
+        <dc:Bounds x="1616" y="296" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1610" y="335" width="48" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0y4qnnu_di" bpmnElement="EndEvent_1d4ohv1">
+        <dc:Bounds x="1505" y="76" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1512" y="115" width="25" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_00beuz9_di" bpmnElement="SequenceFlow_00beuz9">
+        <di:waypoint xsi:type="dc:Point" x="1399" y="94" />
+        <di:waypoint xsi:type="dc:Point" x="1451" y="94" />
+        <di:waypoint xsi:type="dc:Point" x="1451" y="94" />
+        <di:waypoint xsi:type="dc:Point" x="1505" y="94" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1421" y="88" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

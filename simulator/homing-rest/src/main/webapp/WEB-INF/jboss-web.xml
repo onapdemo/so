@@ -1,0 +1,3 @@
+<jboss-web>
+	<context-root>api/oof</context-root>
+</jboss-web>
