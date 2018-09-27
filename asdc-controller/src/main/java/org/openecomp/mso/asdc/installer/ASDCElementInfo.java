@@ -26,9 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.openecomp.sdc.api.notification.IArtifactInfo;
-import org.openecomp.sdc.api.notification.IResourceInstance;
-import org.openecomp.sdc.api.notification.IVfModuleMetadata;
+import org.onap.sdc.api.notification.IArtifactInfo;
+import org.onap.sdc.api.notification.IResourceInstance;
 import org.openecomp.mso.asdc.client.ASDCConfiguration;
 
 /**
@@ -109,7 +108,7 @@ public class ASDCElementInfo {
 	 */
 	@Override
 	public final String toString() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		List<String> aggregatedElements = new ArrayList<>();
 		for (Entry<String, String> entry : this.getElementInfoMap().entrySet()) {
 			aggregatedElements.add(entry.getKey() + ": " + entry.getValue());

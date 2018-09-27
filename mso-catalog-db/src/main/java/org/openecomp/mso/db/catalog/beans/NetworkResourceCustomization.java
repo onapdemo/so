@@ -20,20 +20,25 @@
 package org.openecomp.mso.db.catalog.beans;
 
 import java.sql.Timestamp;
+
+import com.openpojo.business.annotation.BusinessKey;
+
 import java.io.Serializable;
 
 public class NetworkResourceCustomization implements Serializable{
 
 	// modelCustomizationUuid and networkResourceModelUuid form a composite primary key
+	@BusinessKey
 	private String modelCustomizationUuid = null;
+	@BusinessKey
 	private String networkResourceModelUuid = null;
 	public static final long serialVersionUID = -1322322139926390329L;
-	private String modelInstanceName;
-	private Timestamp created;
-	private String networkTechnology;
+	private String modelInstanceName = null;
+	private Timestamp created = null;
+	private String networkTechnology = null;
 	private String networkType = null;
-	private String networkScope;
-	private String networkRole;
+	private String networkScope = null;
+	private String networkRole = null;
 
 	// These fields are not in the table directly - but I'm adding them here for storage in the objects we're dealing with
 	private NetworkResource networkResource = null;
@@ -103,24 +108,14 @@ public class NetworkResourceCustomization implements Serializable{
 	}
 
 	@Override
-	public String toString () {
-		StringBuilder sb = new StringBuilder();
-		sb.append("modelCustomizationUuid=");
-		sb.append(this.modelCustomizationUuid);
-		sb.append("networkResourceModelUuid=");
-		sb.append(this.networkResourceModelUuid);
-		sb.append("modelInstanceName=");
-		sb.append(this.modelInstanceName);
-		sb.append("networkType=");
-		sb.append(this.networkType);
-		sb.append("networkTechnology=");
-		sb.append(this.networkTechnology);
-		sb.append("networkScope=");
-		sb.append(this.networkScope);
-		sb.append("networkRole=");
-		sb.append(this.networkRole);
-
-		return sb.toString();
+	public String toString() {
+		return "modelCustomizationUuid=" + this.modelCustomizationUuid +
+			"networkResourceModelUuid=" + this.networkResourceModelUuid +
+			"modelInstanceName=" + this.modelInstanceName +
+			"networkType=" + this.networkType +
+			"networkTechnology=" + this.networkTechnology +
+			"networkScope=" + this.networkScope +
+			"networkRole=" + this.networkRole;
 	}
 
     @Override

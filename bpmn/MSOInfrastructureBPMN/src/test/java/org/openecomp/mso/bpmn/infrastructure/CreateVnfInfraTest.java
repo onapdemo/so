@@ -35,6 +35,7 @@ import static org.openecomp.mso.bpmn.mock.StubResponseAAI.MockGetServiceInstance
 import static org.openecomp.mso.bpmn.mock.StubResponseAAI.MockNodeQueryServiceInstanceById;
 import static org.openecomp.mso.bpmn.mock.StubResponseAAI.MockNodeQueryServiceInstanceById_404;
 import static org.openecomp.mso.bpmn.mock.StubResponseAAI.MockPutGenericVnf;
+import static org.openecomp.mso.bpmn.mock.StubResponseDatabase.MockGetVnfCatalogDataCustomizationUuid;
 import static org.openecomp.mso.bpmn.mock.StubResponseDatabase.mockUpdateRequestDB;
 import static org.openecomp.mso.bpmn.mock.StubResponseSDNCAdapter.mockSDNCAdapter;
 
@@ -83,18 +84,19 @@ public class CreateVnfInfraTest extends WorkflowTest {
 		MockGetServiceInstance("SDN-ETHERNET-INTERNET", "123456789", "MIS%252F1604%252F0026%252FSW_INTERNET", "GenericFlows/getServiceInstance.xml");
 		MockGetGenericVnfByName_404();
 		MockPutGenericVnf();
+		MockGetVnfCatalogDataCustomizationUuid("customizationId123", "VIPR/getCatalogVnfData.json");
 		mockSDNCAdapter("/SDNCAdapter", "vnf-type>STMTN", 200, "VfModularity/StandardSDNCSynchResponse.xml");
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 
 		String businessKey = UUID.randomUUID().toString();
-		Map<String, Object> variables = new HashMap<String, Object>();
+		Map<String, Object> variables = new HashMap<>();
 		setVariablesSuccess(variables, createVnfInfraRequest, "testRequestId123", "MIS%2F1604%2F0026%2FSW_INTERNET");
 		TestAsyncResponse asyncResponse = invokeAsyncProcess("CreateVnfInfra",
 				"v1", businessKey, createVnfInfraRequest, variables);
 
 			WorkflowResponse response = receiveResponse(businessKey, asyncResponse, 10000);
 
-			String responseBody = response.getResponse();
+			String responseBody = response.getContent();
 			System.out.println("Workflow (Synch) Response:\n" + responseBody);
 
 			//injectSDNCCallbacks(callbacks, "assign, query");
@@ -112,7 +114,7 @@ public class CreateVnfInfraTest extends WorkflowTest {
 	//	injectSDNCCallbacks(callbacks, "assign");
 	//	injectSDNCCallbacks(callbacks, "activate");
 		//waitForProcessEnd(businessKey, 10000);
-		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		//assertVariables("true", "true", "false", "true", "Success", null);
 
@@ -124,11 +126,11 @@ public class CreateVnfInfraTest extends WorkflowTest {
 
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariables(variables, null, "testRequestId123", "MIS%2F1604%2F0026%2FSW_INTERNET");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "CreateVnfInfra", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		assertVariables(null, null, null, null, null, "WorkflowException[processKey=CreateVnfInfra,errorCode=2500,errorMessage=Internal Error - WorkflowException Object and/or RequestInfo is null! CreateVnfInfra]");
 
@@ -142,11 +144,11 @@ public class CreateVnfInfraTest extends WorkflowTest {
 		MockNodeQueryServiceInstanceById_404("MIS%2F1604%2F0026%2FSW_INTERNET");
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariables(variables, createVnfInfraRequest, "testRequestId123", "MIS%2F1604%2F0026%2FSW_INTERNET");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "CreateVnfInfra", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		assertVariables(null, null, null, null, null, "WorkflowException[processKey=DoCreateVnf,errorCode=404,errorMessage=Service Instance Not Found]");
 
@@ -174,11 +176,11 @@ public class CreateVnfInfraTest extends WorkflowTest {
 		MockPutGenericVnf();
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariables(variables, createVnfInfraRequest, "testRequestId123", "MIS%2F1604%2F0026%2FSW_INTERNET");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "CreateVnfInfra", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		assertVariables(null, null, null, null, null, "WorkflowException[processKey=DoCreateVnf,errorCode=5000,errorMessage=Generic Vnf Already Exist.]");
 

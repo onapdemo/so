@@ -35,13 +35,15 @@ public class NetworkResource extends MavenLikeVersioning implements Serializable
 	private String neutronNetworkType = null;
 	private String aicVersionMin = null;
 	private String aicVersionMax = null;
-	private String modelName;
-	private String modelInvariantUUID;
-	private String modelVersion;
-	private String toscaNodeType;
-	private Timestamp created;
-	private String modelUUID;
-	private String heatTemplateArtifactUUID;
+	private String modelName = null;
+	private String modelInvariantUUID = null;
+	private String modelVersion = null;
+	private String toscaNodeType = null;
+	private Timestamp created = null;
+	private String modelUUID = null;
+    private String category = null;
+    private String subCategory = null;
+	private String heatTemplateArtifactUUID = null;
 	
 	public NetworkResource() {}
 	
@@ -123,8 +125,40 @@ public class NetworkResource extends MavenLikeVersioning implements Serializable
 	public void setModelUUID(String modelUUID) {
 		this.modelUUID = modelUUID;
 	}
+	
+	
+    /**
+     * @return Returns the category.
+     */
+    public String getCategory() {
+        return category;
+    }
 
-	public String getHeatTemplateArtifactUUID() {
+    
+    /**
+     * @param category The category to set.
+     */
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    
+    /**
+     * @return Returns the subCategory.
+     */
+    public String getSubCategory() {
+        return subCategory;
+    }
+
+    
+    /**
+     * @param subCategory The subCategory to set.
+     */
+    public void setSubCategory(String subCategory) {
+        this.subCategory = subCategory;
+    }
+
+    public String getHeatTemplateArtifactUUID() {
 		return heatTemplateArtifactUUID;
 	}
 

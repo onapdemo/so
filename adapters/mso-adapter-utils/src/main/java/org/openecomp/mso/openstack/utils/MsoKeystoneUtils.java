@@ -26,7 +26,8 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openecomp.mso.cloud.CloudConfig;
+import java.util.Optional;
+
 import org.openecomp.mso.cloud.CloudConfigFactory;
 import org.openecomp.mso.cloud.CloudIdentity;
 import org.openecomp.mso.cloud.CloudSite;
@@ -39,9 +40,6 @@ import org.openecomp.mso.openstack.exceptions.MsoCloudSiteNotFound;
 import org.openecomp.mso.openstack.exceptions.MsoException;
 import org.openecomp.mso.openstack.exceptions.MsoOpenstackException;
 import org.openecomp.mso.openstack.exceptions.MsoTenantAlreadyExists;
-import org.openecomp.mso.properties.MsoJavaProperties;
-import org.openecomp.mso.properties.MsoPropertiesException;
-import org.openecomp.mso.properties.MsoPropertiesFactory;
 import com.woorea.openstack.base.client.OpenStackBaseException;
 import com.woorea.openstack.base.client.OpenStackConnectException;
 import com.woorea.openstack.base.client.OpenStackRequest;
@@ -63,13 +61,13 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
     // token will be used until it expires.
     //
     // The cache key is "cloudId"
-    private static Map <String, KeystoneCacheEntry> adminClientCache = new HashMap <String, KeystoneCacheEntry> ();
+    private static Map <String, KeystoneCacheEntry> adminClientCache = new HashMap<>();
 
 	private static MsoLogger LOGGER = MsoLogger.getMsoLogger (MsoLogger.Catalog.RA);
 	String msoPropID;
 	
-    public MsoKeystoneUtils (String msoPropID) {
-		super(msoPropID);
+    public MsoKeystoneUtils(String msoPropID, CloudConfigFactory cloudConfigFactory) {
+		super(msoPropID, cloudConfigFactory);
 		this.msoPropID = msoPropID;
 		LOGGER.debug("MsoKeyStoneUtils:" + msoPropID);
 	}
@@ -87,7 +85,7 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
      * <p>
      *
      * @param tenantName The tenant name to create
-     * @param cloudId The cloud identifier (may be a region) in which to create the tenant.
+     * @param cloudSiteId The cloud identifier (may be a region) in which to create the tenant.
      * @return the tenant ID of the newly created tenant
      * @throws MsoTenantAlreadyExists Thrown if the requested tenant already exists
      * @throws MsoOpenstackException Thrown if the Openstack API call returns an exception
@@ -97,13 +95,12 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
                                 Map <String, String> metadata,
                                 boolean backout) throws MsoException {
         // Obtain the cloud site information where we will create the tenant
-        CloudSite cloudSite = cloudConfig.getCloudSite (cloudSiteId);
-        if (cloudSite == null) {
+        Optional<CloudSite> cloudSiteOpt = getCloudConfigFactory().getCloudConfig().getCloudSite(cloudSiteId);
+        if (!cloudSiteOpt.isPresent()) {
         	LOGGER.error(MessageEnum.RA_CREATE_TENANT_ERR, "MSOCloudSite not found", "", "", MsoLogger.ErrorCode.DataError, "MSOCloudSite not found");
             throw new MsoCloudSiteNotFound (cloudSiteId);
         }
-        Keystone keystoneAdminClient = getKeystoneAdminClient (cloudSite);
-
+        Keystone keystoneAdminClient = getKeystoneAdminClient(cloudSiteOpt.get());
         Tenant tenant = null;
         try {
             // Check if the tenant already exists
@@ -134,7 +131,7 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
         // Add MSO User to the tenant as a member and
         // apply tenant metadata if supported by the cloud site
         try {
-            CloudIdentity cloudIdentity = cloudSite.getIdentityService ();
+            CloudIdentity cloudIdentity = cloudSiteOpt.get().getIdentityService ();
 
             User msoUser = findUserByNameOrId (keystoneAdminClient, cloudIdentity.getMsoId ());
             Role memberRole = findRoleByNameOrId (keystoneAdminClient, cloudIdentity.getMemberRole ());
@@ -200,12 +197,10 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
      * @return the tenant properties of the queried tenant, or null if not found
      * @throws MsoOpenstackException Thrown if the Openstack API call returns an exception
      */
-    public MsoTenant queryTenant (String tenantId, String cloudSiteId) throws MsoException, MsoCloudSiteNotFound {
+    public MsoTenant queryTenant (String tenantId, String cloudSiteId) throws MsoException {
         // Obtain the cloud site information where we will query the tenant
-        CloudSite cloudSite = cloudConfig.getCloudSite (cloudSiteId);
-        if (cloudSite == null) {
-            throw new MsoCloudSiteNotFound (cloudSiteId);
-        }
+        CloudSite cloudSite = getCloudConfigFactory().getCloudConfig().getCloudSite(cloudSiteId).orElseThrow(
+                () -> new MsoCloudSiteNotFound(cloudSiteId));
 
         Keystone keystoneAdminClient = getKeystoneAdminClient (cloudSite);
 
@@ -216,7 +211,7 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
                 return null;
             }
 
-            Map <String, String> metadata = new HashMap <String, String> ();
+            Map <String, String> metadata = new HashMap<>();
             if (cloudSite.getIdentityService ().hasTenantMetadata ()) {
                 OpenStackRequest <Metadata> request = keystoneAdminClient.tenants ().showMetadata (tenant.getId ());
                 Metadata tenantMetadata = executeAndRecordOpenstackRequest (request, msoProps);
@@ -252,10 +247,8 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
      */
     public MsoTenant queryTenantByName (String tenantName, String cloudSiteId) throws MsoException {
         // Obtain the cloud site information where we will query the tenant
-        CloudSite cloudSite = cloudConfig.getCloudSite (cloudSiteId);
-        if (cloudSite == null) {
-            throw new MsoCloudSiteNotFound (cloudSiteId);
-        }
+        CloudSite cloudSite = getCloudConfigFactory().getCloudConfig().getCloudSite(cloudSiteId).orElseThrow(
+                () -> new MsoCloudSiteNotFound(cloudSiteId));
         Keystone keystoneAdminClient = getKeystoneAdminClient (cloudSite);
 
         try {
@@ -264,7 +257,7 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
                 return null;
             }
 
-            Map <String, String> metadata = new HashMap <String, String> ();
+            Map <String, String> metadata = new HashMap<>();
             if (cloudSite.getIdentityService ().hasTenantMetadata ()) {
                 OpenStackRequest <Metadata> request = keystoneAdminClient.tenants ().showMetadata (tenant.getId ());
                 Metadata tenantMetadata = executeAndRecordOpenstackRequest (request, msoProps);
@@ -299,10 +292,8 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
      */
     public boolean deleteTenant (String tenantId, String cloudSiteId) throws MsoException {
         // Obtain the cloud site information where we will query the tenant
-        CloudSite cloudSite = cloudConfig.getCloudSite (cloudSiteId);
-        if (cloudSite == null) {
-            throw new MsoCloudSiteNotFound (cloudSiteId);
-        }
+        CloudSite cloudSite = getCloudConfigFactory().getCloudConfig().getCloudSite(cloudSiteId).orElseThrow(
+                () -> new MsoCloudSiteNotFound(cloudSiteId));
         Keystone keystoneAdminClient = getKeystoneAdminClient (cloudSite);
 
         try {
@@ -323,59 +314,6 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
         } catch (OpenStackBaseException e) {
             // Convert Keystone OpenStackResponseException to MsoOpenstackException
             throw keystoneErrorToMsoException (e, "Delete Tenant");
-        } catch (RuntimeException e) {
-            // Catch-all
-            throw runtimeExceptionToMsoException (e, "DeleteTenant");
-        }
-
-        return true;
-    }
-
-    /**
-     * Delete the specified Tenant (by Name) in the given cloud. This method returns true or
-     * false, depending on whether the tenant existed and was successfully deleted, or if
-     * the tenant already did not exist. Both cases are treated as success (no Exceptions).
-     * <p>
-     * Note for the AIC Cloud (DCP/LCP): all admin requests go to the centralized identity
-     * service in DCP. So deleting a tenant from one cloudSiteId will remove it from all
-     * sites managed by that identity service.
-     * <p>
-     *
-     * @param tenantName The name of the tenant to delete
-     * @param cloudSiteId The cloud identifier from which to delete the tenant.
-     * @return true if the tenant was deleted, false if the tenant did not exist.
-     * @throws MsoOpenstackException If the Openstack API call returns an exception.
-     */
-    public boolean deleteTenantByName (String tenantName, String cloudSiteId) throws MsoException {
-        // Obtain the cloud site information where we will query the tenant
-        CloudSite cloudSite = cloudConfig.getCloudSite (cloudSiteId);
-        if (cloudSite == null) {
-            throw new MsoCloudSiteNotFound (cloudSiteId);
-        }
-        Keystone keystoneAdminClient = getKeystoneAdminClient (cloudSite);
-
-        try {
-            // Need the Tenant ID to delete (can't directly delete by name)
-            Tenant tenant = findTenantByName (keystoneAdminClient, tenantName);
-            if (tenant == null) {
-                // OK if tenant already doesn't exist.
-            	LOGGER.error(MessageEnum.RA_TENANT_NOT_FOUND, tenantName, cloudSiteId, "", "", MsoLogger.ErrorCode.DataError, "Tenant not found");
-                return false;
-            }
-
-            // Execute the Delete. It has no return value.
-            OpenStackRequest <Void> request = keystoneAdminClient.tenants ().delete (tenant.getId ());
-            executeAndRecordOpenstackRequest (request, msoProps);
-
-            LOGGER.debug ("Deleted Tenant " + tenant.getId () + " (" + tenant.getName () + ")");
-
-            // Clear any cached clients. Not really needed, ID will not be reused.
-            MsoHeatUtils.expireHeatClient (tenant.getId (), cloudSiteId);
-            MsoNeutronUtils.expireNeutronClient (tenant.getId (), cloudSiteId);
-        } catch (OpenStackBaseException e) {
-            // Note: It doesn't seem to matter if tenant doesn't exist, no exception is thrown.
-            // Convert Keystone OpenStackResponseException to MsoOpenstackException
-            throw keystoneErrorToMsoException (e, "DeleteTenant");
         } catch (RuntimeException e) {
             // Catch-all
             throw runtimeExceptionToMsoException (e, "DeleteTenant");
@@ -447,7 +385,9 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
         // Get the Identity service URL. Throws runtime exception if not found per region.
         String adminUrl = null;
         try {
-            adminUrl = KeystoneUtils.findEndpointURL (access.getServiceCatalog (), "identity", region, "admin");
+        	// TODO:  FOR TESTING!!!!
+        	adminUrl = KeystoneUtils.findEndpointURL (access.getServiceCatalog (), "identity", region, "public");
+        	adminUrl = adminUrl.replaceFirst("5000", "35357");
         } catch (RuntimeException e) {
             String error = "Identity service not found: region=" + region + ",cloud=" + cloudIdentity.getId ();
             alarmLogger.sendAlarm ("MsoConfigurationError", MsoAlarmLogger.CRITICAL, error);
@@ -465,29 +405,6 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
         adminClientCache.put (cloudId, cacheEntry);
 
         return keystone;
-    }
-
-    /*
-     * Find a tenant (or query its existance) by its Name or Id. Check first against the
-     * ID. If that fails, then try by name.
-     *
-     * @param adminClient an authenticated Keystone object
-     *
-     * @param tenantName the tenant name or ID to query
-     *
-     * @return a Tenant object or null if not found
-     */
-    public Tenant findTenantByNameOrId (Keystone adminClient, String tenantNameOrId) {
-        if (tenantNameOrId == null) {
-            return null;
-        }
-
-        Tenant tenant = findTenantById (adminClient, tenantNameOrId);
-        if (tenant == null) {
-            tenant = findTenantByName (adminClient, tenantNameOrId);
-        }
-
-        return tenant;
     }
 
     /*
@@ -654,11 +571,9 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
         }
 
         public boolean isExpired () {
-            if (expires == null) {
-                return true;
-            }
+            // adding arbitrary guard timer of 5 minutes
+            return expires == null || System.currentTimeMillis() > (expires.getTimeInMillis() - 300000);
 
-            return System.currentTimeMillis() > expires.getTimeInMillis();
         }
     }
 
@@ -679,11 +594,11 @@ public class MsoKeystoneUtils extends MsoTenantUtils {
      * This may be useful if cached credentials get out of sync.
      */
     public static void adminCacheReset () {
-        adminClientCache = new HashMap <String, KeystoneCacheEntry> ();
+        adminClientCache = new HashMap<>();
     }
 
 	@Override
-	public String getKeystoneUrl(String regionId, String msoPropID, CloudIdentity cloudIdentity) throws MsoException {
+	public String getKeystoneUrl(String regionId, String msoPropID, CloudIdentity cloudIdentity) {
 		return cloudIdentity.getIdentityUrl();
 	}
 }

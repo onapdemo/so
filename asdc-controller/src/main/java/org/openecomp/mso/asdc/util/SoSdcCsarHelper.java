@@ -1,11 +1,12 @@
+
 package org.openecomp.mso.asdc.util;
 
-import org.openecomp.sdc.tosca.parser.api.ISdcCsarHelper;
-import org.openecomp.sdc.tosca.parser.exceptions.SdcToscaParserException;
-import org.openecomp.sdc.tosca.parser.impl.SdcPropertyNames;
-import org.openecomp.sdc.tosca.parser.impl.SdcToscaParserFactory;
-import org.openecomp.sdc.toscaparser.api.Group;
-import org.openecomp.sdc.toscaparser.api.NodeTemplate;
+import org.onap.sdc.tosca.parser.api.ISdcCsarHelper;
+import org.onap.sdc.tosca.parser.exceptions.SdcToscaParserException;
+import org.onap.sdc.tosca.parser.impl.SdcPropertyNames;
+import org.onap.sdc.tosca.parser.impl.SdcToscaParserFactory;
+import org.onap.sdc.toscaparser.api.Group;
+import org.onap.sdc.toscaparser.api.NodeTemplate;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -13,7 +14,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
 
-import static org.openecomp.sdc.tosca.parser.impl.SdcPropertyNames.PROPERTY_NAME_CUSTOMIZATIONUUID;
+import static org.onap.sdc.tosca.parser.impl.SdcPropertyNames.PROPERTY_NAME_CUSTOMIZATIONUUID;
 
 public class SoSdcCsarHelper {
 

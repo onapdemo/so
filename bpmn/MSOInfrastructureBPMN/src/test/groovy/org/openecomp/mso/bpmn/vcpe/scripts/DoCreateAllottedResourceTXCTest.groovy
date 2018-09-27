@@ -24,7 +24,6 @@ import org.camunda.bpm.engine.ProcessEngineServices
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity
 import org.camunda.bpm.engine.repository.ProcessDefinition
-import org.camunda.bpm.engine.runtime.Execution
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -62,11 +61,7 @@ class DoCreateAllottedResourceTXCTest extends GroovyTestBase {
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
-		def fr = new FileReader("src/test/resources/mso.bpmn.urn.properties")
-		urnProps.load(fr)
-		fr.close()
-		
-		aaiUriPfx = urnProps.get("aai.endpoint")
+		// nothing for now
 	}
 	  
     @Before

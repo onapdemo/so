@@ -3,6 +3,7 @@
  * ONAP - SO
  * ================================================================================
  * Copyright (C) 2017 Huawei Technologies Co., Ltd. All rights reserved.
+ * Copyright (C) 2018 CMCC All rights reserved.
  * ================================================================================
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +25,8 @@ import java.io.ByteArrayOutputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.openecomp.mso.logger.MsoLogger;
 
 /**
@@ -44,12 +45,14 @@ public class NSResourceInputParameter {
     private String nsServiceName;
 
     private String nsServiceDescription;
+    
+    private String nsServiceModelUUID;
 
     private NsParameters nsParameters;
 
+    private NsScaleParameters nsScaleParameters;
 
 
-    
     /**
      * @return Returns the nsServiceName.
      */
@@ -106,7 +109,7 @@ public class NSResourceInputParameter {
         String jsonString = null;
         try {
             ObjectMapper mapper = new ObjectMapper();
-            mapper.enable(SerializationConfig.Feature.WRAP_ROOT_VALUE);
+            mapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
             jsonString = mapper.writeValueAsString(this);
         } catch (Exception e) {
             LOGGER.debug("Exception:", e);
@@ -127,4 +130,23 @@ public class NSResourceInputParameter {
             return "";
         }
     }
+
+    public NsScaleParameters getNsScaleParameters() {
+        return nsScaleParameters;
+    }
+
+    public void setNsScaleParameters(NsScaleParameters nsScaleParameters) {
+        this.nsScaleParameters = nsScaleParameters;
+    }
+
+
+	public String getNsServiceModelUUID() {
+		return nsServiceModelUUID;
+	}
+
+
+	public void setNsServiceModelUUID(String nsServiceModelUUID) {
+		this.nsServiceModelUUID = nsServiceModelUUID;
+	}
+    
 }

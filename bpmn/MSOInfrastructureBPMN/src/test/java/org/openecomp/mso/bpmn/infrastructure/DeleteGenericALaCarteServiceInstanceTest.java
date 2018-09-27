@@ -78,7 +78,7 @@ public class DeleteGenericALaCarteServiceInstanceTest extends WorkflowTest {
 
 		Map<String, String> variables = setupVariables();
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "DeleteGenericALaCarteServiceInstance", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String workflowResp = BPMNUtil.getVariable(processEngineRule, "DeleteGenericALaCarteServiceInstance", "WorkflowResponse");
 		//assertNotNull(workflowResp);
@@ -95,7 +95,7 @@ public class DeleteGenericALaCarteServiceInstanceTest extends WorkflowTest {
 
 	// Success Scenario
 	private Map<String, String> setupVariables() {
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		variables.put("isDebugLogEnabled", "true");
 		variables.put("bpmnRequest", getRequest());
 		variables.put("mso-request-id", "RaaTestRequestId-1");

@@ -22,12 +22,10 @@ package org.openecomp.mso.apihandler.common;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Properties;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-
 import org.openecomp.mso.logger.MsoLogger;
 import org.openecomp.mso.properties.MsoJavaProperties;
 import org.openecomp.mso.utils.CryptoUtils;
@@ -69,30 +67,19 @@ public abstract class RequestClient {
 
 	public abstract HttpResponse post(String request, String requestId, String requestTimeout, String schemaVersion, String serviceInstanceId, String action) throws ClientProtocolException, IOException;
 
-	public abstract HttpResponse post(String request) throws ClientProtocolException, IOException;
+	public abstract HttpResponse post(String request) throws IOException;
+
+	public abstract HttpResponse post(RequestClientParamater params) throws IOException;
 	
-	public abstract HttpResponse post(String requestId, boolean isBaseVfModule,
-			int recipeTimeout, String requestAction, String serviceInstanceId,
-			String vnfId, String vfModuleId, String volumeGroupId, String networkId,
-			String serviceType, String vnfType, String vfModuleType, String networkType,
-			String requestDetails)
-					throws ClientProtocolException, IOException;
-	
-	public abstract HttpResponse get() 
-					throws ClientProtocolException, IOException;
+	public abstract HttpResponse get() throws  IOException;
 	
 	protected String getEncryptedPropValue (String prop, String defaultValue, String encryptionKey) {
 		 try {
-			 String result = CryptoUtils.decrypt(prop, encryptionKey);
-			 return result;
+			 return CryptoUtils.decrypt(prop, encryptionKey);
 		 }	
 		 catch (GeneralSecurityException e) {
 			 msoLogger.debug("Security exception", e);
 		 }
 		 return defaultValue;
 	 }
-
-	
-
-
 }

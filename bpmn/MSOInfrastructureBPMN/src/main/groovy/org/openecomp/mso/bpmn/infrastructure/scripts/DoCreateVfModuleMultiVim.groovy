@@ -23,6 +23,7 @@ package org.openecomp.mso.bpmn.infrastructure.scripts
 import org.apache.commons.lang3.BooleanUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.camunda.bpm.engine.delegate.BpmnError
+import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.runtime.Execution
 import org.openecomp.mso.bpmn.common.scripts.*
 import org.openecomp.mso.bpmn.core.RollbackData
@@ -52,7 +53,7 @@ public class DoCreateVfModuleMultiVim extends VfModuleBase {
      * Validates the request message and sets up the workflow.
      * @param execution the execution
      */
-    public void preProcessRequest(Execution execution) {
+    public void preProcessRequest(DelegateExecution execution) {
         def method = getClass().getSimpleName() + '.preProcessRequest(' + 'execution=' + execution.getId() + ')'
         def isDebugLogEnabled = execution.getVariable('isDebugLogEnabled')
         logDebug('Entered ' + method, isDebugLogEnabled)

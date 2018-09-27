@@ -23,6 +23,7 @@ package org.openecomp.mso.db.catalog.beans;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.openecomp.mso.db.catalog.utils.MavenLikeVersioning;
@@ -31,13 +32,13 @@ public class ToscaCsar extends MavenLikeVersioning implements Serializable {
 	
 	private static final long serialVersionUID = 768026109321305392L;
 
-	private String artifactUUID;
-	private String name;
-	private String artifactChecksum;
-	private String url;
-	private String description;
-	private Timestamp created;
-	private Set<Service> services;
+	private String artifactUUID = null;
+	private String name = null;
+	private String artifactChecksum = null;
+	private String url = null;
+	private String description = null;
+	private Timestamp created = null;
+	private Set<Service> services = new HashSet<>();
 	
 	public ToscaCsar() { }
 	
@@ -100,9 +101,11 @@ public class ToscaCsar extends MavenLikeVersioning implements Serializable {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("TOSCACSAR: artifactUUID=" + artifactUUID + ",name=" + name + ",version=" + version + ",description=" + description+",artifactChecksum="+artifactChecksum+",url="+url);
+		sb.append("TOSCACSAR: artifactUUID=").append(artifactUUID).append(",name=").append(name).append(",version=")
+            .append(version).append(",description=").append(description).append(",artifactChecksum=")
+            .append(artifactChecksum).append(",url=").append(url);
 		for (Service service : services) {
-			sb.append ("\n" + service.toString());
+			sb.append("\n").append(service.toString());
 		}
 		if (created != null) {
 		        sb.append (",created=");

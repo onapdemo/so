@@ -32,18 +32,19 @@ public class VnfResourceCustomization extends MavenLikeVersioning implements Ser
 	private static final long serialVersionUID = 768026109321305392L;
 	
 	private String modelCustomizationUuid = null;
-	private String modelInstanceName;
-	private Timestamp created;
+	private String modelInstanceName = null;
+	private Timestamp created = null;
 	private String vnfResourceModelUuid = null;
-	private String vnfResourceModelUUID;
+	private String vnfResourceModelUUID = null;
 	private Integer minInstances;
 	private Integer maxInstances;
 	private Integer availabilityZoneMaxCount;
 	private VnfResource vnfResource;
-	private String nfFunction;
-	private String nfType;
-	private String nfRole;
-	private String nfNamingCode;
+	private String nfFunction = null;
+	private String nfType = null;
+	private String nfRole = null;
+	private String nfNamingCode = null;
+	private String multiStageDesign = null;
     private List<VfModuleCustomization> vfModuleCustomizations;
     private Set<ServiceToResourceCustomization> serviceResourceCustomizations;
 
@@ -144,10 +145,16 @@ public class VnfResourceCustomization extends MavenLikeVersioning implements Ser
 	public void setNfNamingCode(String nfNamingCode) {
 		this.nfNamingCode = nfNamingCode;
 	}
+	public String getMultiStageDesign() {
+		return this.multiStageDesign;
+	}
+	public void setMultiStageDesign(String multiStageDesign) {
+		this.multiStageDesign = multiStageDesign;
+	}
 	public List<VfModuleCustomization> getVfModuleCustomizations() {
 		return this.vfModuleCustomizations;
 	}
-	public void setVfModuleCustomizations(ArrayList<VfModuleCustomization> vfModuleCustomizations) {
+	public void setVfModuleCustomizations(List<VfModuleCustomization> vfModuleCustomizations) {
 		this.vfModuleCustomizations = vfModuleCustomizations;
 	}
 	public void addVfModuleCustomization(VfModuleCustomization vfmc) {
@@ -155,7 +162,7 @@ public class VnfResourceCustomization extends MavenLikeVersioning implements Ser
 			if (this.vfModuleCustomizations != null) {
 				this.vfModuleCustomizations.add(vfmc);
 			} else {
-				this.vfModuleCustomizations = new ArrayList<VfModuleCustomization>();
+				this.vfModuleCustomizations = new ArrayList<>();
 				this.vfModuleCustomizations.add(vfmc);
 			}
 		}
@@ -179,21 +186,18 @@ public class VnfResourceCustomization extends MavenLikeVersioning implements Ser
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder("VnfResourceCustomization: ");
-		sb.append("ModelCustUuid=" + this.modelCustomizationUuid ); 
-		sb.append(", ModelInstanceName=" + this.modelInstanceName);
-		sb.append(", vnfResourceModelUuid=" + this.vnfResourceModelUUID); 
-		sb.append(", creationTimestamp=" + this.created); 
-		sb.append(", minInstances=" + this.minInstances);
-		sb.append(", maxInstances=" + this.maxInstances);
-		sb.append(", availabilityZoneMaxCount=" + this.availabilityZoneMaxCount);
-//		sb.append(", vnfResource:\n" + this.vnfResource == null ? "null" : this.vnfResource.toString());
-		sb.append(", nfFunction=" + this.nfFunction); 
-		sb.append(", nfType=" + this.nfType);
-		sb.append(", nfRole=" + this.nfRole);
-		sb.append(", nfNamingCode=" + this.nfNamingCode);
-		
-		return sb.toString();
+        return "VnfResourceCustomization: " + "ModelCustUuid=" + this.modelCustomizationUuid +
+            ", ModelInstanceName=" + this.modelInstanceName +
+            ", vnfResourceModelUuid=" + this.vnfResourceModelUUID +
+            ", creationTimestamp=" + this.created +
+            ", minInstances=" + this.minInstances +
+            ", maxInstances=" + this.maxInstances +
+            ", availabilityZoneMaxCount=" + this.availabilityZoneMaxCount +
+            ", nfFunction=" + this.nfFunction +
+            ", nfType=" + this.nfType +
+            ", nfRole=" + this.nfRole +
+            ", nfNamingCode=" + this.nfNamingCode +
+            ", multiStageDesign=" + this.multiStageDesign;
 	}
 
 }

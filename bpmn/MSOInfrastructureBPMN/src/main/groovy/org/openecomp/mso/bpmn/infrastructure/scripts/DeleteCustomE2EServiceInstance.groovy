@@ -35,7 +35,7 @@ import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
 
 import org.camunda.bpm.engine.delegate.BpmnError
-import org.camunda.bpm.engine.runtime.Execution
+import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.json.JSONObject;
 import org.apache.commons.lang3.*
 import org.apache.commons.codec.binary.Base64;
@@ -59,7 +59,7 @@ public class DeleteCustomE2EServiceInstance extends AbstractServiceTaskProcessor
 	JsonUtils jsonUtil = new JsonUtils()
 	VidUtils vidUtils = new VidUtils()
 	
-	public void preProcessRequest (Execution execution) {
+	public void preProcessRequest (DelegateExecution execution) {
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 		execution.setVariable("prefix",Prefix)
 		String msg = ""
@@ -73,22 +73,28 @@ public class DeleteCustomE2EServiceInstance extends AbstractServiceTaskProcessor
 			
 
 			String requestId = execution.getVariable("mso-request-id")
-			execution.setVariable("msoRequestId", requestId)
+			execution.setVariable("msoRequestId", requestId)			
 			utils.log("INFO", "Input Request:" + siRequest + " reqId:" + requestId, isDebugEnabled)
-			
+		
 			String serviceInstanceId = execution.getVariable("serviceInstanceId")
 			if (isBlank(serviceInstanceId)) {
 				msg = "Input serviceInstanceId' is null"
 				exceptionUtil.buildAndThrowWorkflowException(execution, 500, msg)
 			}
-						
-			String serviceType = execution.getVariable("serviceType")
-			if (isBlank(serviceType)) {
-				msg = "Input serviceType' is null"
-				utils.log("INFO", msg, isDebugEnabled)
-			} else {
-				execution.setVariable("serviceType", serviceType)
-			}
+
+			
+			//requestInfo
+//			String productFamilyId = jsonUtil.getJsonValue(siRequest, "requestDetails.requestInfo.productFamilyId")
+//			if (isBlank(productFamilyId))
+//			{
+//				msg = "Input productFamilyId is null"
+//				utils.log("INFO", msg, isDebugEnabled)
+//				//exceptionUtil.buildAndThrowWorkflowException(execution, 500, msg)
+//			} else {
+//				execution.setVariable("productFamilyId", productFamilyId)
+//			}
+			String source = jsonUtil.getJsonValue(siRequest, "source")
+			execution.setVariable("source", source)
 			
 			//subscriberInfo
 			String globalSubscriberId = jsonUtil.getJsonValue(siRequest, "globalSubscriberId")
@@ -99,16 +105,19 @@ public class DeleteCustomE2EServiceInstance extends AbstractServiceTaskProcessor
 				execution.setVariable("globalSubscriberId", globalSubscriberId)
 			}
 			
-			//operationId
+			//requestParameters
+			String subscriptionServiceType = jsonUtil.getJsonValue(siRequest, "serviceType")
+			if (isBlank(subscriptionServiceType)) {
+				msg = "Input subscriptionServiceType is null"
+				utils.log("DEBUG", msg, isDebugEnabled)
+				//exceptionUtil.buildAndThrowWorkflowException(execution, 500, msg)
+			} else {
+				execution.setVariable("subscriptionServiceType", subscriptionServiceType)
+			}
 			String operationId = jsonUtil.getJsonValue(siRequest, "operationId")
-		 	if (isBlank(operationId)) {
-		 		operationId = UUID.randomUUID().toString()
-		 	 }   
-			execution.setVariable("operationId", operationId) 
-			execution.setVariable("operationType", "DELETE") 
-			
-			execution.setVariable("URN_mso_adapters_openecomp_db_endpoint","http://mso.mso.testlab.openecomp.org:8080/dbadapters/RequestsDbAdapter")
-			
+			execution.setVariable("operationId", operationId)
+					
+			execution.setVariable("operationType", "DELETE")
 		} catch (BpmnError e) {
 			throw e;
 		} catch (Exception ex){
@@ -119,14 +128,11 @@ public class DeleteCustomE2EServiceInstance extends AbstractServiceTaskProcessor
 		utils.log("INFO"," ***** Exit preProcessRequest *****",  isDebugEnabled)
 	}
 
-	public void sendSyncResponse (Execution execution) {
+	public void sendSyncResponse (DelegateExecution execution) {
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 		utils.log("INFO", " *** sendSyncResponse  *** ", isDebugEnabled)
-
 		try {
 			String operationId = execution.getVariable("operationId")
-			
-			// RESTResponse (for API Handler (APIH) Reply Task) :  :  
 			String syncResponse = """{"operationId":"${operationId}"}""".trim()
 			utils.log("INFO", " sendSynchResponse: xmlSyncResponse - " + "\n" + syncResponse, isDebugEnabled)
 			sendWorkflowResponse(execution, 202, syncResponse)
@@ -138,7 +144,7 @@ public class DeleteCustomE2EServiceInstance extends AbstractServiceTaskProcessor
 		utils.log("INFO"," ***** Exit sendSyncResopnse *****",  isDebugEnabled)
 	}
 	
-	public void sendSyncError (Execution execution) {
+	public void sendSyncError (DelegateExecution execution) {
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 		utils.log("INFO", " *** sendSyncError *** ", isDebugEnabled)
 
@@ -166,7 +172,7 @@ public class DeleteCustomE2EServiceInstance extends AbstractServiceTaskProcessor
 
 	}
 	
-	public void prepareCompletionRequest (Execution execution) {
+	public void prepareCompletionRequest (DelegateExecution execution) {
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 		utils.log("INFO", " *** prepareCompletion *** ", isDebugEnabled)
 
@@ -199,7 +205,7 @@ public class DeleteCustomE2EServiceInstance extends AbstractServiceTaskProcessor
 		utils.log("INFO", "*** Exit prepareCompletionRequest ***", isDebugEnabled)
 	}
 	
-	public void prepareFalloutRequest(Execution execution){
+	public void prepareFalloutRequest(DelegateExecution execution){
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 		utils.log("INFO", " *** prepareFalloutRequest *** ", isDebugEnabled)
 
@@ -245,7 +251,7 @@ public class DeleteCustomE2EServiceInstance extends AbstractServiceTaskProcessor
 	// *******************************
 	//     Build DB request Section
 	// *******************************
-	public void prepareDBRequest (Execution execution) {
+	public void prepareDBRequest (DelegateExecution execution) {
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 		execution.setVariable("prefix", Prefix)
 
@@ -287,7 +293,7 @@ public class DeleteCustomE2EServiceInstance extends AbstractServiceTaskProcessor
 	// *******************************
 	//     Build Error Section
 	// *******************************
-	public void prepareDBRequestError (Execution execution) {
+	public void prepareDBRequestError (DelegateExecution execution) {
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 		execution.setVariable("prefix", Prefix)
 
@@ -332,7 +338,57 @@ public class DeleteCustomE2EServiceInstance extends AbstractServiceTaskProcessor
 
 	 }
 
-	public void processJavaException(Execution execution) {
+	public void processJavaException(DelegateExecution execution) {
 		//TODO:
+	}
+
+	/**
+	 * Init the service Operation Status
+	 */
+	public void prepareInitServiceOperationStatus(DelegateExecution execution){
+		def isDebugEnabled = execution.getVariable("isDebugLogEnabled")
+		utils.log("DEBUG", " ======== STARTED prepareInitServiceOperationStatus Process ======== ", isDebugEnabled)
+		try{
+			String serviceId = execution.getVariable("serviceInstanceId")
+			String operationId = execution.getVariable("operationId")
+			String userId = ""
+			String result = "processing"
+			String progress = "0"
+			String reason = ""
+			String operationContent = "Prepare service creation"
+			utils.log("DEBUG", "Generated new operation for Service Instance serviceId:" + serviceId + " operationId:" + operationId, isDebugEnabled)
+			serviceId = UriUtils.encode(serviceId,"UTF-8")
+
+			def dbAdapterEndpoint = execution.getVariable("URN_mso_adapters_openecomp_db_endpoint")
+			execution.setVariable("CVFMI_dbAdapterEndpoint", dbAdapterEndpoint)
+			utils.log("DEBUG", "DB Adapter Endpoint is: " + dbAdapterEndpoint, isDebugEnabled)
+
+			String payload =
+					"""<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                        xmlns:ns="http://org.openecomp.mso/requestsdb">
+                        <soapenv:Header/>
+                        <soapenv:Body>
+                            <ns:updateServiceOperationStatus xmlns:ns="http://org.openecomp.mso/requestsdb">
+                            <serviceId>${serviceId}</serviceId>
+                            <operationId>${operationId}</operationId>
+                            <operationType>DELETE</operationType>
+                            <userId>${userId}</userId>
+                            <result>${result}</result>
+                            <operationContent>${operationContent}</operationContent>
+                            <progress>${progress}</progress>
+                            <reason>${reason}</reason>
+                        </ns:updateServiceOperationStatus>
+                    </soapenv:Body>
+                </soapenv:Envelope>"""
+
+			payload = utils.formatXml(payload)
+			execution.setVariable("CVFMI_updateServiceOperStatusRequest", payload)
+			utils.log("DEBUG", "Outgoing updateServiceOperStatusRequest: \n" + payload, isDebugEnabled)
+
+		}catch(Exception e){
+			utils.log("ERROR", "Exception Occured Processing prepareInitServiceOperationStatus. Exception is:\n" + e, isDebugEnabled)
+			execution.setVariable("CVFMI_ErrorResponse", "Error Occurred during prepareInitServiceOperationStatus Method:\n" + e.getMessage())
+		}
+		utils.log("DEBUG", "======== COMPLETED prepareInitServiceOperationStatus Process ======== ", isDebugEnabled)
 	}
 }

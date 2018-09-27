@@ -88,7 +88,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		String businessKey = UUID.randomUUID().toString();
 		String createVfModuleVolRequest = FileUtil.readResourceFile("__files/CreateVfModuleVolumeInfraV1/createVfModuleVolume_VID_request.json");
 		
-		Map<String, Object> testVariables = new HashMap<String, Object>();
+		Map<String, Object> testVariables = new HashMap<>();
 		testVariables.put("requestId", "TEST-REQUEST-ID-0123");
 		testVariables.put("serviceInstanceId", "test-service-instance-id");
 		testVariables.put("vnfId", "TEST-VNF-ID-0123");
@@ -98,7 +98,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		TestAsyncResponse asyncResponse = invokeAsyncProcess("CreateVfModuleVolumeInfraV1", "v1", businessKey, createVfModuleVolRequest, testVariables);
 		WorkflowResponse response = receiveResponse(businessKey, asyncResponse, 1000000);
 
-		String responseBody = response.getResponse();
+		String responseBody = response.getContent();
 		System.out.println("Workflow (Synch) Response:\n" + responseBody);
 		
 		injectVNFRestCallbacks(callbacks, "volumeGroupCreate");
@@ -138,7 +138,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		String businessKey = UUID.randomUUID().toString();
 		String createVfModuleVolRequest = FileUtil.readResourceFile("__files/CreateVfModuleVolumeInfraV1/createVfModuleVolume_VID_request.json");
 		
-		Map<String, Object> testVariables = new HashMap<String, Object>();
+		Map<String, Object> testVariables = new HashMap<>();
 		testVariables.put("requestId", "TEST-REQUEST-ID-0123");
 		testVariables.put("serviceInstanceId", "test-service-instance-id");
 		testVariables.put("vnfId", "TEST-VNF-ID-0123");
@@ -148,7 +148,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		TestAsyncResponse asyncResponse = invokeAsyncProcess("CreateVfModuleVolumeInfraV1", "v1", businessKey, createVfModuleVolRequest, testVariables);
 		WorkflowResponse response = receiveResponse(businessKey, asyncResponse, 1000000);
 
-		String responseBody = response.getResponse();
+		String responseBody = response.getContent();
 		System.out.println("Workflow (Synch) Response:\n" + responseBody);
 		
 		injectVNFRestCallbacks(callbacks, "volumeGroupCreate");
@@ -182,7 +182,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		String businessKey = UUID.randomUUID().toString();
 		String createVfModuleVolRequest = FileUtil.readResourceFile("__files/CreateVfModuleVolumeInfraV1/createVfModuleVolume_VID_request.json");
 		
-		Map<String, Object> testVariables = new HashMap<String, Object>();
+		Map<String, Object> testVariables = new HashMap<>();
 		testVariables.put("requestId", "TEST-REQUEST-ID-0123");
 		testVariables.put("serviceInstanceId", "test-service-instance-id");
 		testVariables.put("vnfId", "TEST-VNF-ID-0123");
@@ -192,7 +192,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		TestAsyncResponse asyncResponse = invokeAsyncProcess("CreateVfModuleVolumeInfraV1", "v1", businessKey, createVfModuleVolRequest, testVariables);
 		WorkflowResponse response = receiveResponse(businessKey, asyncResponse, 1000000);
 
-		String responseBody = response.getResponse();
+		String responseBody = response.getContent();
 		System.out.println("Workflow (Synch) Response:\n" + responseBody);
 		
 		//injectVNFRestCallbacks(callbacks, "volumeGroupCreate");
@@ -229,7 +229,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		String businessKey = UUID.randomUUID().toString();
 		String createVfModuleVolRequest = FileUtil.readResourceFile("__files/CreateVfModuleVolumeInfraV1/createVfModuleVolume_VID_request.json");
 		
-		Map<String, Object> testVariables = new HashMap<String, Object>();
+		Map<String, Object> testVariables = new HashMap<>();
 		testVariables.put("requestId", "TEST-REQUEST-ID-0123");
 		testVariables.put("serviceInstanceId", "test-service-instance-id");
 		testVariables.put("vnfId", "TEST-VNF-ID-0123");
@@ -239,7 +239,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		TestAsyncResponse asyncResponse = invokeAsyncProcess("CreateVfModuleVolumeInfraV1", "v1", businessKey, createVfModuleVolRequest, testVariables);
 		WorkflowResponse response = receiveResponse(businessKey, asyncResponse, 1000000);
 
-		String responseBody = response.getResponse();
+		String responseBody = response.getContent();
 		System.out.println("Workflow (Synch) Response:\n" + responseBody);
 		
 		injectVNFRestCallbacks(callbacks, "volumeGroupException");
@@ -271,7 +271,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		String businessKey = UUID.randomUUID().toString();
 		String createVfModuleVolRequest = FileUtil.readResourceFile("__files/CreateVfModuleVolumeInfraV1/createVfModuleVolume_VID_request_noreqparm.json");
 		
-		Map<String, Object> testVariables = new HashMap<String, Object>();
+		Map<String, Object> testVariables = new HashMap<>();
 		testVariables.put("requestId", "TEST-REQUEST-ID-0123");
 		testVariables.put("serviceInstanceId", "test-service-instance-id");
 		testVariables.put("vnfId", "TEST-VNF-ID-0123");
@@ -280,7 +280,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		TestAsyncResponse asyncResponse = invokeAsyncProcess("CreateVfModuleVolumeInfraV1", "v1", businessKey, createVfModuleVolRequest, testVariables);
 		WorkflowResponse response = receiveResponse(businessKey, asyncResponse, 1000000);
 
-		String responseBody = response.getResponse();
+		String responseBody = response.getContent();
 		System.out.println("Workflow (Synch) Response:\n" + responseBody);
 		
 		//injectVNFRestCallbacks(callbacks, "volumeGroupCreate");
@@ -311,7 +311,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		String businessKey = UUID.randomUUID().toString();
 		String createVfModuleVolRequest = FileUtil.readResourceFile("__files/CreateVfModuleVolumeInfraV1/createVfModuleVolume_VID_request.json");
 		
-		Map<String, Object> testVariables = new HashMap<String, Object>();
+		Map<String, Object> testVariables = new HashMap<>();
 		testVariables.put("requestId", "TEST-REQUEST-ID-0123");
 		testVariables.put("serviceInstanceId", "test-service-instance-id");
 		//testVariables.put("vnfId", "TEST-VNF-ID-0123");
@@ -320,7 +320,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		TestAsyncResponse asyncResponse = invokeAsyncProcess("CreateVfModuleVolumeInfraV1", "v1", businessKey, createVfModuleVolRequest, testVariables);
 		WorkflowResponse response = receiveResponse(businessKey, asyncResponse, 1000000);
 
-		String responseBody = response.getResponse();
+		String responseBody = response.getContent();
 		System.out.println("Workflow (Synch) Response:\n" + responseBody);
 		waitForProcessEnd(businessKey, 100000);
 		checkVariable(businessKey, "CVMVINFRAV1_SuccessIndicator", false);
@@ -349,7 +349,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		String businessKey = UUID.randomUUID().toString();
 		String createVfModuleVolRequest = FileUtil.readResourceFile("__files/CreateVfModuleVolumeInfraV1/createVfModuleVolume_VID_request.json");
 		
-		Map<String, Object> testVariables = new HashMap<String, Object>();
+		Map<String, Object> testVariables = new HashMap<>();
 		testVariables.put("requestId", "TEST-REQUEST-ID-0123");
 		testVariables.put("serviceInstanceId", "test-service-instance-id");
 		//testVariables.put("vnfId", "TEST-VNF-ID-0123");
@@ -358,7 +358,7 @@ public class CreateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		TestAsyncResponse asyncResponse = invokeAsyncProcess("CreateVfModuleVolumeInfraV1", "v1", businessKey, createVfModuleVolRequest, testVariables);
 		WorkflowResponse response = receiveResponse(businessKey, asyncResponse, 1000000);
 
-		String responseBody = response.getResponse();
+		String responseBody = response.getContent();
 		System.out.println("Workflow (Synch) Response:\n" + responseBody);
 		waitForProcessEnd(businessKey, 100000);
 		checkVariable(businessKey, "CVMVINFRAV1_SuccessIndicator", false);

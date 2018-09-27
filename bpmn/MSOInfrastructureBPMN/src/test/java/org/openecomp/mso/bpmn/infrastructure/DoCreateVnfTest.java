@@ -42,6 +42,7 @@ import org.junit.Test;
 import org.openecomp.mso.bpmn.common.BPMNUtil;
 import org.openecomp.mso.bpmn.common.WorkflowTest;
 import org.openecomp.mso.bpmn.common.WorkflowTest.CallbackSet;
+import org.openecomp.mso.bpmn.core.domain.VnfResource;
 import org.openecomp.mso.bpmn.mock.FileUtil;
 
 /**
@@ -74,7 +75,7 @@ public class DoCreateVnfTest extends WorkflowTest {
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 
 		String businessKey = UUID.randomUUID().toString();
-		Map<String, Object> variables = new HashMap<String, Object>();
+		Map<String, Object> variables = new HashMap<>();
 		setVariablesSuccess(variables, createVnfInfraRequest, "testRequestId123", "MIS%2F1604%2F0026%2FSW_INTERNET");
 		invokeSubProcess("DoCreateVnf", businessKey, variables);
 
@@ -123,6 +124,8 @@ public class DoCreateVnfTest extends WorkflowTest {
 				"}";
 		variables.put("serviceModelInfo", serviceModelInfo);
 		variables.put("globalSubscriberId", "MSO-1610");
+		VnfResource vnfResource = new VnfResource();
+		variables.put("vnfResourceDecomposition", vnfResource);
 	}
 
 }

@@ -8,7 +8,7 @@ import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity
 import org.camunda.bpm.engine.impl.pvm.process.ProcessDefinitionImpl
 import org.camunda.bpm.engine.repository.ProcessDefinition
-import org.camunda.bpm.engine.runtime.Execution;
+import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.mockito.MockitoAnnotations
 import org.mockito.runners.MockitoJUnitRunner
 import org.mockito.internal.debugging.MockitoDebuggerImpl
@@ -164,7 +164,7 @@ class DoUpdateNetworkInstanceRollbackTest  {
 
 		}
 
-		public void initializeVariables (Execution mockExecution) {
+		public void initializeVariables (DelegateExecution mockExecution) {
 
 			verify(mockExecution).setVariable(Prefix + "rollbackNetworkRequest", null)
 			verify(mockExecution).setVariable(Prefix + "rollbackSDNCRequest", null)
@@ -210,7 +210,7 @@ class DoUpdateNetworkInstanceRollbackTest  {
 			when(mockExecution.getVariable("URN_mso_adapters_sdnc_resource_endpoint")).thenReturn("http://localhost:28090/SDNCAdapterRpc")
 
 
-			// preProcessRequest(Execution execution)
+			// preProcessRequest(DelegateExecution execution)
 			DoUpdateNetworkInstanceRollback DoUpdateNetworkInstanceRollback = new DoUpdateNetworkInstanceRollback()
 			DoUpdateNetworkInstanceRollback.preProcessRequest(mockExecution)
 

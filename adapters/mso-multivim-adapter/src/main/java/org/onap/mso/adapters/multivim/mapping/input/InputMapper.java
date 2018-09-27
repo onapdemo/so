@@ -6,7 +6,6 @@ import org.openecomp.mso.logger.MessageEnum;
 import org.openecomp.mso.logger.MsoLogger;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Map;
 
 public abstract class InputMapper {
@@ -45,12 +44,12 @@ public abstract class InputMapper {
         return valueMapperProperties.getPropertyOrDefault(oldValue, defaultValue);
     }
 
-    public String mapInputs(final String inputs) throws IOException, ParseException {
+    public String mapInputs(final String inputs) throws IOException, Exception {
 
         JSONObject inputJsonObj = null;
         try {
             inputJsonObj = new JSONObject(inputs);
-        } catch (ParseException pe) {
+        } catch (Exception pe) {
             LOGGER.error(MessageEnum.RA_CREATE_VNF_ERR, "", "mapInputs",
                     MsoLogger.ErrorCode.BusinessProcesssError, "Failed to convert inputs to JSON", pe);
             throw pe;

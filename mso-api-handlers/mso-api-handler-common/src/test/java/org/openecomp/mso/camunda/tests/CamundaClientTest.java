@@ -25,8 +25,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
-import java.util.Properties;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.ProtocolVersion;
@@ -35,19 +33,16 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-
 import org.openecomp.mso.apihandler.common.CommonConstants;
 import org.openecomp.mso.apihandler.common.RequestClient;
 import org.openecomp.mso.apihandler.common.RequestClientFactory;
+import org.openecomp.mso.apihandler.common.RequestClientParamater;
 import org.openecomp.mso.properties.MsoJavaProperties;
-
 
 /**
  * This class implements test methods of Camunda Beans.
@@ -67,10 +62,7 @@ public class CamundaClientTest {
     }
 
     @Test
-    public void tesCamundaPost() throws JsonGenerationException,
-    JsonMappingException, IOException {
-
-
+    public void tesCamundaPost() throws IOException {
         String responseBody ="{\"links\":[{\"method\":\"GET\",\"href\":\"http://localhost:9080/engine-rest/process-instance/2047c658-37ae-11e5-9505-7a1020524153\",\"rel\":\"self\"}],\"id\":\"2047c658-37ae-11e5-9505-7a1020524153\",\"definitionId\":\"dummy:10:73298961-37ad-11e5-9505-7a1020524153\",\"businessKey\":null,\"caseInstanceId\":null,\"ended\":true,\"suspended\":false}";
 
         HttpResponse mockResponse = createResponse(200, responseBody);
@@ -101,6 +93,26 @@ public class CamundaClientTest {
         assertEquals(statusCode, HttpStatus.SC_OK);
     }
 
+    @Test
+    public void testCamundaPostJson() throws IOException {
+        String responseBody ="{\"links\":[{\"method\":\"GET\",\"href\":\"http://localhost:9080/engine-rest/process-instance/2047c658-37ae-11e5-9505-7a1020524153\",\"rel\":\"self\"}],\"id\":\"2047c658-37ae-11e5-9505-7a1020524153\",\"definitionId\":\"dummy:10:73298961-37ad-11e5-9505-7a1020524153\",\"businessKey\":null,\"caseInstanceId\":null,\"ended\":true,\"suspended\":false}";
+
+        HttpResponse mockResponse = createResponse(200, responseBody);
+        mockHttpClient = Mockito.mock(HttpClient.class);
+        Mockito.when(mockHttpClient.execute(Mockito.any(HttpPost.class)))
+                .thenReturn(mockResponse);
+        String orchestrationURI = "/engine-rest/process-definition/key/dummy/start";
+
+        MsoJavaProperties props = new MsoJavaProperties();
+        props.setProperty(CommonConstants.CAMUNDA_URL, "http://localhost:8089");
+
+        RequestClient requestClient = RequestClientFactory.getRequestClient(orchestrationURI, props);
+        requestClient.setClient(mockHttpClient);
+        HttpResponse response = requestClient.post(createParams());
+        assertEquals(requestClient.getType(), CommonConstants.CAMUNDA);
+        assertEquals(response.getStatusLine().getStatusCode(), HttpStatus.SC_OK);
+    }
+
     private HttpResponse createResponse(int respStatus,
                                         String respBody) {
         HttpResponse response = new BasicHttpResponse(
@@ -114,6 +126,15 @@ public class CamundaClientTest {
             e.printStackTrace();
         }
         return response;
+    }
+
+    private RequestClientParamater createParams(){
+        return new RequestClientParamater.Builder().setRequestId("mso-req-id").setBaseVfModule(false).
+                setRecipeTimeout(180).setRequestAction("createInstance").setServiceInstanceId("svc-inst-id").
+                setVnfId("vnf-id").setVfModuleId("vf-module-id").setVolumeGroupId("vg-id").setNetworkId("nw-id").
+                setConfigurationId("conf-id").setServiceType("svc-type").setVnfType("vnf-type").
+                setVfModuleType("vf-module-type").setNetworkType("nw-type").setRequestDetails("").
+                setRecipeParamXsd("").build();
     }
 
 

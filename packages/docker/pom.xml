@@ -3,13 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.openecomp.so</groupId>
+		<groupId>org.onap.so</groupId>
 		<artifactId>packages</artifactId>
-		<version>1.1.1-SNAPSHOT</version>
+		<version>1.2.0-SNAPSHOT</version>
 	</parent>
 
 	<packaging>pom</packaging>
-	<groupId>org.openecomp.so</groupId>
 	<artifactId>docker</artifactId>
 
 	<name>MSO Docker Deliveries</name>
@@ -21,10 +20,12 @@
 		<!-- If the maven profile "docker" is specified the parameter -Dmso.git.url=<MsoGitRepo> must be provided
 		     i.e: mvn clean install -P docker -Dmso.git.url=https://gerrit.openecomp.org/r-->
 		<mso.chef.git.url.prefix>${env.GIT_NO_PROJECT}</mso.chef.git.url.prefix>
-		<mso.chef.git.branchname>azure</mso.chef.git.branchname>
+		<mso.chef.git.branchname>azure1b_1c</mso.chef.git.branchname>
 		<mso.chef.git.url.suffix.chef.repo>so/chef-repo</mso.chef.git.url.suffix.chef.repo>
 		<mso.chef.git.url.suffix.chef.config>so/so-config</mso.chef.git.url.suffix.chef.config>
 		<mso.project.version>${project.version}</mso.project.version>
+		<docker.pull.registry>nexus3.onap.org:10001</docker.pull.registry>
+		<docker.push.registry>nexus3.onap.org:10003</docker.push.registry>
 	</properties>
 
 	<build>
@@ -33,6 +34,7 @@
 		    <plugin>
                 <groupId>org.codehaus.groovy.maven</groupId>
                 <artifactId>gmaven-plugin</artifactId>
+                <version>1.0</version>
                 <executions>
                   <execution>
                     <phase>validate</phase>
@@ -47,8 +49,8 @@
                             versionArray = project.properties['mso.project.version'].split('\\.');
                         }
 
-                        if ( project.properties['mso.project.version'].endsWith("-amsterdam") ) {
-                            project.properties['project.docker.latesttag.version']=versionArray[0] + '.' + versionArray[1] + "-amsterdam-latest";
+                        if ( project.properties['mso.project.version'].endsWith("-SNAPSHOT") ) {
+                            project.properties['project.docker.latesttag.version']=versionArray[0] + '.' + versionArray[1] + "-SNAPSHOT-latest";
                         } else {
                             project.properties['project.docker.latesttag.version']=versionArray[0] + '.' + versionArray[1] + "-STAGING-latest";
                         }
@@ -100,11 +102,13 @@
 			<plugin>
 				<groupId>io.fabric8</groupId>
 				<artifactId>docker-maven-plugin</artifactId>
-				<version>0.16.5</version>
+				<version>0.19.1</version>
 
 				<configuration>
 					<verbose>true</verbose>
 					<apiVersion>1.23</apiVersion>
+					<pullRegistry>${docker.pull.registry}</pullRegistry>
+					<pushRegistry>${docker.push.registry}</pushRegistry>
 
 					<images>
 						<image>
@@ -113,7 +117,7 @@
 							<build>
 								<cleanup>try</cleanup>
 								<dockerFileDir>docker-files</dockerFileDir>
-								<dockerFile>docker-files/Dockerfile.jacoco</dockerFile>
+								<dockerFile>Dockerfile.jacoco</dockerFile>
 
 							</build>
 						</image>
@@ -124,7 +128,7 @@
 
 								<cleanup>try</cleanup>
 								<dockerFileDir>docker-files</dockerFileDir>
-								<dockerFile>docker-files/Dockerfile.ubuntu-16.04-update</dockerFile>
+								<dockerFile>Dockerfile.ubuntu-16.04-update</dockerFile>
 
 							</build>
 						</image>
@@ -135,7 +139,7 @@
 
 								<cleanup>try</cleanup>
 								<dockerFileDir>docker-files</dockerFileDir>
-								<dockerFile>docker-files/Dockerfile.wildfly-10</dockerFile>
+								<dockerFile>Dockerfile.wildfly-10</dockerFile>
 
 							</build>
 						</image>
@@ -149,13 +153,15 @@
 								</tags>
 								<cleanup>try</cleanup>
 								<dockerFileDir>docker-files</dockerFileDir>
-								<dockerFile>docker-files/Dockerfile.mso-arquillian</dockerFile>
+								<dockerFile>Dockerfile.mso-arquillian</dockerFile>
 
 							</build>
 						</image>
 						<image>
 							<name>openecomp/mso:%l</name>
+							<alias>onap/so:%1</alias>
 							<alias>mso</alias>
+							<alias>so</alias>
 							<build>
 								<tags>
 									<tag>${project.version}-STAGING-${maven.build.timestamp}</tag>
@@ -163,7 +169,7 @@
 								</tags>
 								<cleanup>try</cleanup>
 								<dockerFileDir>docker-files</dockerFileDir>
-								<dockerFile>docker-files/Dockerfile.mso-chef-final</dockerFile>
+								<dockerFile>Dockerfile.mso-chef-final</dockerFile>
 								<assembly>
 									<basedir>/</basedir>
 

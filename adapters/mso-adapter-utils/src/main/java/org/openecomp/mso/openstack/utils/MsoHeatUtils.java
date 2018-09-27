@@ -22,20 +22,24 @@
 package org.openecomp.mso.openstack.utils;
 
 import java.io.Serializable;
-import java.rmi.server.ObjID;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParseException;
-
+import org.openecomp.mso.adapters.vdu.CloudInfo;
+import org.openecomp.mso.adapters.vdu.PluginAction;
+import org.openecomp.mso.adapters.vdu.VduArtifact;
+import org.openecomp.mso.adapters.vdu.VduArtifact.ArtifactType;
+import org.openecomp.mso.adapters.vdu.VduException;
+import org.openecomp.mso.adapters.vdu.VduInstance;
+import org.openecomp.mso.adapters.vdu.VduModelInfo;
+import org.openecomp.mso.adapters.vdu.VduPlugin;
+import org.openecomp.mso.adapters.vdu.VduStateType;
+import org.openecomp.mso.adapters.vdu.VduStatus;
 import org.openecomp.mso.cloud.CloudConfig;
 import org.openecomp.mso.cloud.CloudConfigFactory;
 import org.openecomp.mso.cloud.CloudIdentity;
@@ -57,6 +61,9 @@ import org.openecomp.mso.openstack.exceptions.MsoTenantNotFound;
 import org.openecomp.mso.properties.MsoJavaProperties;
 import org.openecomp.mso.properties.MsoPropertiesException;
 import org.openecomp.mso.properties.MsoPropertiesFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.woorea.openstack.base.client.OpenStackConnectException;
 import com.woorea.openstack.base.client.OpenStackRequest;
 import com.woorea.openstack.base.client.OpenStackResponseException;
@@ -70,7 +77,7 @@ import com.woorea.openstack.keystone.model.Access;
 import com.woorea.openstack.keystone.model.Authentication;
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
 
-public class MsoHeatUtils extends MsoCommonUtils {
+public class MsoHeatUtils extends MsoCommonUtils implements VduPlugin{
 
 	private MsoPropertiesFactory msoPropertiesFactory;
 
@@ -93,9 +100,6 @@ public class MsoHeatUtils extends MsoCommonUtils {
     // The cache key is "tenantId:cloudId"
     private static Map <String, HeatCacheEntry> heatClientCache = new HashMap <> ();
 
-    // Fetch cloud configuration each time (may be cached in CloudConfig class)
-    protected CloudConfig cloudConfig;
-
     private static final MsoLogger LOGGER = MsoLogger.getMsoLogger (MsoLogger.Catalog.RA);
 
     protected MsoJavaProperties msoProps = null;
@@ -112,6 +116,13 @@ public class MsoHeatUtils extends MsoCommonUtils {
 
     private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
+    /**
+     * This constructor MUST be used ONLY in the JUNIT tests, not for real code.
+     */
+    public MsoHeatUtils() {
+    	
+    }
+    
     /**
      * This constructor MUST be used ONLY in the JUNIT tests, not for real code.
      * The MsoPropertiesFactory will be added by EJB injection.
@@ -131,11 +142,12 @@ public class MsoHeatUtils extends MsoCommonUtils {
 		} catch (MsoPropertiesException e) {
 			LOGGER.error (MessageEnum.LOAD_PROPERTIES_FAIL, "Unknown. Mso Properties ID not found in cache: " + msoPropID, "", "", MsoLogger.ErrorCode.DataError, "Exception - Mso Properties ID not found in cache", e);
 		}
-        cloudConfig = cloudConfigFactory.getCloudConfig ();
         LOGGER.debug("MsoHeatUtils:" + msoPropID);
-
     }
 
+    protected CloudConfigFactory getCloudConfigFactory() {
+    	return cloudConfigFactory;
+    }
 
     /**
      * keep this old method signature here to maintain backwards compatibility. keep others as well.
@@ -145,7 +157,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
                                   String tenantId,
                                   String stackName,
                                   String heatTemplate,
-                                  Map <String, ? extends Object> stackInputs,
+                                  Map <String, ?> stackInputs,
                                   boolean pollForCompletion,
                                   int timeoutMinutes) throws MsoException {
         // Just call the new method with the environment & files variable set to null
@@ -167,7 +179,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
                                   String tenantId,
                                   String stackName,
                                   String heatTemplate,
-                                  Map <String, ? extends Object> stackInputs,
+                                  Map <String, ?> stackInputs,
                                   boolean pollForCompletion,
                                   int timeoutMinutes,
                                   String environment) throws MsoException {
@@ -190,7 +202,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
                                   String tenantId,
                                   String stackName,
                                   String heatTemplate,
-                                  Map <String, ? extends Object> stackInputs,
+                                  Map <String, ?> stackInputs,
                                   boolean pollForCompletion,
                                   int timeoutMinutes,
                                   String environment,
@@ -213,7 +225,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
                                   String tenantId,
                                   String stackName,
                                   String heatTemplate,
-                                  Map <String, ? extends Object> stackInputs,
+                                  Map <String, ?> stackInputs,
                                   boolean pollForCompletion,
                                   int timeoutMinutes,
                                   String environment,
@@ -260,7 +272,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
      * @param cloudSiteId The cloud (may be a region) in which to create the stack.
      * @param tenantId The Openstack ID of the tenant in which to create the Stack
      * @param stackName The name of the stack to create
-     * @param stackTemplate The Heat template
+     * @param heatTemplate The Heat template
      * @param stackInputs A map of key/value inputs
      * @param pollForCompletion Indicator that polling should be handled in Java vs. in the client
      * @param environment An optional yaml-format string to specify environmental parameters
@@ -277,7 +289,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
                                   String tenantId,
                                   String stackName,
                                   String heatTemplate,
-                                  Map <String, ? extends Object> stackInputs,
+                                  Map <String, ?> stackInputs,
                                   boolean pollForCompletion,
                                   int timeoutMinutes,
                                   String environment,
@@ -311,10 +323,8 @@ public class MsoHeatUtils extends MsoCommonUtils {
         }
 
         // Obtain the cloud site information where we will create the stack
-        CloudSite cloudSite = cloudConfig.getCloudSite (cloudSiteId);
-        if (cloudSite == null) {
-            throw new MsoCloudSiteNotFound (cloudSiteId);
-        }
+        CloudSite cloudSite = getCloudConfigFactory().getCloudConfig().getCloudSite(cloudSiteId).orElseThrow(
+                () -> new MsoCloudSiteNotFound(cloudSiteId));
         LOGGER.debug("Found: " + cloudSite.toString());
         // Get a Heat client. They are cached between calls (keyed by tenantId:cloudId)
         // This could throw MsoTenantNotFound or MsoOpenstackException (both propagated)
@@ -363,6 +373,21 @@ public class MsoHeatUtils extends MsoCommonUtils {
                 stack.setFiles (heatFiles);
             }
         }
+        
+        // 1802 - attempt to add better formatted printout of request to openstack
+        try {
+        	Map<String, Object> inputs = new HashMap<String, Object>();
+        	for (String key : stackInputs.keySet()) {
+        		Object o = (Object) stackInputs.get(key);
+        		if (o != null) {
+        			inputs.put(key, o);
+        		}
+        	}
+        	LOGGER.debug(this.printStackRequest(tenantId, heatFiles, files, environment, inputs, stackName, heatTemplate, timeoutMinutes, backout, cloudSiteId));
+        } catch (Exception e) {
+        	// that's okay - this is a nice-to-have
+        	LOGGER.debug("(had an issue printing nicely formatted request to debuglog) " + e.getMessage());
+        }
 
         Stack heatStack = null;
         try {
@@ -376,7 +401,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
             request.header ("X-Auth-User", cloudIdentity.getMsoId ());
             request.header ("X-Auth-Key", cloudIdentity.getMsoPass ());
             LOGGER.debug ("headers added, about to executeAndRecordOpenstackRequest");
-            LOGGER.debug(this.requestToStringBuilder(stack).toString());
+            //LOGGER.debug(this.requestToStringBuilder(stack).toString());
             // END - try to fix X-Auth-User
             heatStack = executeAndRecordOpenstackRequest (request, msoProps);
         } catch (OpenStackResponseException e) {
@@ -634,10 +659,8 @@ public class MsoHeatUtils extends MsoCommonUtils {
         LOGGER.debug ("Query HEAT stack: " + stackName + " in tenant " + tenantId);
 
         // Obtain the cloud site information where we will create the stack
-        CloudSite cloudSite = cloudConfig.getCloudSite (cloudSiteId);
-        if (cloudSite == null) {
-            throw new MsoCloudSiteNotFound (cloudSiteId);
-        }
+        CloudSite cloudSite = getCloudConfigFactory().getCloudConfig().getCloudSite(cloudSiteId).orElseThrow(
+                () -> new MsoCloudSiteNotFound(cloudSiteId));
         LOGGER.debug("Found: " + cloudSite.toString());
 
         // Get a Heat client. They are cached between calls (keyed by tenantId:cloudId)
@@ -650,7 +673,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
         } catch (MsoTenantNotFound e) {
             // Tenant doesn't exist, so stack doesn't either
             LOGGER.debug ("Tenant with id " + tenantId + "not found.", e);
-            return new StackInfo (stackName, HeatStatus.NOTFOUND, null, null);
+            return new StackInfo (stackName, HeatStatus.NOTFOUND);
         } catch (MsoException me) {
             // Got an Openstack error. Propagate it
             LOGGER.error (MessageEnum.RA_CONNECTION_EXCEPTION, "OpenStack", "Openstack Exception on Token request: " + me, "Openstack", "", MsoLogger.ErrorCode.AvailabilityError, "Connection Exception");
@@ -664,7 +687,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
 
         if (heatStack == null) {
             // Stack does not exist. Return a StackInfo with status NOTFOUND
-            StackInfo stackInfo = new StackInfo (stackName, HeatStatus.NOTFOUND, null, null);
+            StackInfo stackInfo = new StackInfo (stackName, HeatStatus.NOTFOUND);
             return stackInfo;
         }
 
@@ -698,10 +721,8 @@ public class MsoHeatUtils extends MsoCommonUtils {
                                   String stackName,
                                   boolean pollForCompletion) throws MsoException {
         // Obtain the cloud site information where we will create the stack
-        CloudSite cloudSite = cloudConfig.getCloudSite (cloudSiteId);
-        if (cloudSite == null) {
-            throw new MsoCloudSiteNotFound (cloudSiteId);
-        }
+        CloudSite cloudSite = getCloudConfigFactory().getCloudConfig().getCloudSite(cloudSiteId).orElseThrow(
+                () -> new MsoCloudSiteNotFound(cloudSiteId));
         LOGGER.debug("Found: " + cloudSite.toString());
 
         // Get a Heat client. They are cached between calls (keyed by tenantId:cloudId)
@@ -714,7 +735,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
         } catch (MsoTenantNotFound e) {
             // Tenant doesn't exist, so stack doesn't either
             LOGGER.debug ("Tenant with id " + tenantId + "not found.", e);
-            return new StackInfo (stackName, HeatStatus.NOTFOUND, null, null);
+            return new StackInfo (stackName, HeatStatus.NOTFOUND);
         } catch (MsoException me) {
             // Got an Openstack error. Propagate it
             LOGGER.error (MessageEnum.RA_CONNECTION_EXCEPTION, "Openstack", "Openstack Exception on Token request: " + me, "Openstack", "", MsoLogger.ErrorCode.AvailabilityError, "Connection Exception");
@@ -726,7 +747,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
         Stack heatStack = queryHeatStack (heatClient, stackName);
         if (heatStack == null || "DELETE_COMPLETE".equals (heatStack.getStackStatus ())) {
             // Not found. Return a StackInfo with status NOTFOUND
-            return new StackInfo (stackName, HeatStatus.NOTFOUND, null, null);
+            return new StackInfo (stackName, HeatStatus.NOTFOUND);
         }
 
         // Delete the stack.
@@ -749,7 +770,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
         } catch (OpenStackResponseException e) {
             if (e.getStatus () == 404) {
                 // Not found. We are OK with this. Return a StackInfo with status NOTFOUND
-                return new StackInfo (stackName, HeatStatus.NOTFOUND, null, null);
+                return new StackInfo (stackName, HeatStatus.NOTFOUND);
             } else {
                 // Convert the OpenStackResponseException to an MsoOpenstackException
                 throw heatExceptionToMsoException (e, DELETE_STACK);
@@ -815,7 +836,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
             }
 
             // The stack is gone when this point is reached
-            return new StackInfo (stackName, HeatStatus.NOTFOUND, null, null);
+            return new StackInfo (stackName, HeatStatus.NOTFOUND);
         }
 
         // Return the current status (if not polling, the delete may still be in progress)
@@ -840,11 +861,8 @@ public class MsoHeatUtils extends MsoCommonUtils {
      */
     public List <StackInfo> queryAllStacks (String tenantId, String cloudSiteId) throws MsoException {
         // Obtain the cloud site information where we will create the stack
-        CloudSite cloudSite = cloudConfig.getCloudSite (cloudSiteId);
-        if (cloudSite == null) {
-            throw new MsoCloudSiteNotFound (cloudSiteId);
-        }
-
+        CloudSite cloudSite = getCloudConfigFactory().getCloudConfig().getCloudSite(cloudSiteId).orElseThrow(
+                () -> new MsoCloudSiteNotFound(cloudSiteId));
         // Get a Heat client. They are cached between calls (keyed by tenantId:cloudId)
         Heat heatClient = getHeatClient (cloudSite, tenantId);
 
@@ -897,7 +915,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
     public Map <String, Object> validateStackParams (Map <String, Object> inputParams,
                                                      HeatTemplate heatTemplate) throws IllegalArgumentException {
         // Check that required parameters have been supplied for this template type
-        String missingParams = null;
+        StringBuilder missingParams = null;
         List <String> paramList = new ArrayList <> ();
 
         // TODO: Enhance DB to support defaults for Heat Template parameters
@@ -905,9 +923,9 @@ public class MsoHeatUtils extends MsoCommonUtils {
         for (HeatTemplateParam parm : heatTemplate.getParameters ()) {
             if (parm.isRequired () && !inputParams.containsKey (parm.getParamName ())) {
                 if (missingParams == null) {
-                    missingParams = parm.getParamName ();
+                    missingParams = new StringBuilder(parm.getParamName());
                 } else {
-                    missingParams += "," + parm.getParamName ();
+                    missingParams.append("," + parm.getParamName());
                 }
             }
             paramList.add (parm.getParamName ());
@@ -952,8 +970,6 @@ public class MsoHeatUtils extends MsoCommonUtils {
      * tenantID + cloudId so that it can be reused without reauthenticating with
      * Openstack every time.
      *
-     * @param tenantName
-     * @param cloudId
      * @return an authenticated Heat object
      */
     public Heat getHeatClient (CloudSite cloudSite, String tenantId) throws MsoException {
@@ -1040,8 +1056,6 @@ public class MsoHeatUtils extends MsoCommonUtils {
      * the same Tenant Name is repeatedly used for creation/deletion.
      * <p>
      *
-     * @param tenantName
-     * @param cloudId
      */
     public static void expireHeatClient (String tenantId, String cloudId) {
         String cacheKey = cloudId + ":" + tenantId;
@@ -1121,11 +1135,8 @@ public class MsoHeatUtils extends MsoCommonUtils {
         }
 
         public boolean isExpired () {
-            if (expires == null) {
-                return true;
-            }
+            return expires == null || System.currentTimeMillis() > expires.getTimeInMillis();
 
-            return System.currentTimeMillis() > expires.getTimeInMillis();
         }
     }
 
@@ -1232,18 +1243,18 @@ public class MsoHeatUtils extends MsoCommonUtils {
 		} else {
 			for (String key : params.keySet()) {
 				if (params.get(key) instanceof String) {
-					sb.append("\n" + key + "=" + (String) params.get(key));
+					sb.append("\n").append(key).append("=").append((String) params.get(key));
 				} else if (params.get(key) instanceof JsonNode) {
 					String jsonStringOut = this.convertNode((JsonNode)params.get(key));
-					sb.append("\n" + key + "=" + jsonStringOut);
+					sb.append("\n").append(key).append("=").append(jsonStringOut);
 				} else if (params.get(key) instanceof Integer) {
 					String integerOut = "" + params.get(key);
-					sb.append("\n" + key + "=" + integerOut);
+					sb.append("\n").append(key).append("=").append(integerOut);
 
 				} else {
 					try {
 						String str = params.get(key).toString();
-						sb.append("\n" + key + "=" + str);
+						sb.append("\n").append(key).append("=").append(str);
 					} catch (Exception e) {
 						LOGGER.debug("Exception :",e);
 					}
@@ -1258,8 +1269,6 @@ public class MsoHeatUtils extends MsoCommonUtils {
 			final Object obj = JSON_MAPPER.treeToValue(node, Object.class);
 			final String json = JSON_MAPPER.writeValueAsString(obj);
 			return json;
-		} catch (JsonParseException jpe) {
-			LOGGER.debug("Error converting json to string " + jpe.getMessage(), jpe);
 		} catch (Exception e) {
 			LOGGER.debug("Error converting json to string " + e.getMessage(), e);
 		}
@@ -1287,16 +1296,16 @@ public class MsoHeatUtils extends MsoCommonUtils {
 		int counter = 0;
 		sb.append("OUTPUTS:\n");
 		for (String key : outputs.keySet()) {
-			sb.append("outputs[" + counter++ + "]: " + key + "=");
+			sb.append("outputs[").append(counter++).append("]: ").append(key).append("=");
 			Object obj = outputs.get(key);
 			if (obj instanceof String) {
-				sb.append((String)obj +" (a string)");
+				sb.append((String) obj).append(" (a string)");
 			} else if (obj instanceof JsonNode) {
-				sb.append(this.convertNode((JsonNode)obj) + " (a JsonNode)");
+				sb.append(this.convertNode((JsonNode) obj)).append(" (a JsonNode)");
 			} else if (obj instanceof java.util.LinkedHashMap) {
 				try {
 					String str = JSON_MAPPER.writeValueAsString(obj);
-					sb.append(str + " (a java.util.LinkedHashMap)");
+					sb.append(str).append(" (a java.util.LinkedHashMap)");
 				} catch (Exception e) {
 					LOGGER.debug("Exception :",e);
 					sb.append("(a LinkedHashMap value that would not convert nicely)");
@@ -1436,7 +1445,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
      * (heat variable type) -> java Object type
      * string -> String
      * number -> Integer
-     * json -> JsonNode
+     * json -> JsonNode XXX Removed with MSO-1475 / 1802
      * comma_delimited_list -> ArrayList
      * boolean -> Boolean
      * if any of the conversions should fail, we will default to adding it to the inputs
@@ -1454,7 +1463,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
 		
 		if (inputs == null) {
 			LOGGER.debug("convertInputMap - inputs is null - nothing to do here");
-			return new HashMap<String, Object>();
+			return new HashMap<>();
 		}
 		
 		LOGGER.debug("convertInputMap in MsoHeatUtils called, with " + inputs.size() + " inputs, and template " + template.getArtifactUuid());
@@ -1526,26 +1535,14 @@ public class MsoHeatUtils extends MsoCommonUtils {
 						newInputs.put(key, integerString);
 				}
 			} else if ("json".equalsIgnoreCase(type)) {
+				// MSO-1475 - Leave this as a string now
 				String jsonString = inputs.get(key);
-    			JsonNode jsonNode = null;
-    			try {
-    				jsonNode = new ObjectMapper().readTree(jsonString);
-    			} catch (Exception e) {
-					LOGGER.debug("Unable to convert " + jsonString + " to a JsonNode!!", e);
-					jsonNode = null;
-    			}
-    			if (jsonNode != null) {
-    				if (alias)
-    					newInputs.put(realName, jsonNode);
-    				else
-    					newInputs.put(key, jsonNode);
-    			}
-    			else {
-    				if (alias)
-    					newInputs.put(realName, jsonString);
-    				else
-    					newInputs.put(key, jsonString);
-    			}
+				LOGGER.debug("Skipping conversion to jsonNode...");
+    			if (alias)
+    				newInputs.put(realName, jsonString);
+    			else
+    				newInputs.put(key, jsonString);
+    			//}
 			} else if ("comma_delimited_list".equalsIgnoreCase(type)) {
 				String commaSeparated = inputs.get(key);
 				try {
@@ -1563,7 +1560,7 @@ public class MsoHeatUtils extends MsoCommonUtils {
 				}
 			} else if ("boolean".equalsIgnoreCase(type)) {
 				String booleanString = inputs.get(key);
-				Boolean aBool = new Boolean(booleanString);
+				Boolean aBool = Boolean.valueOf(booleanString);
 				if (alias)
 					newInputs.put(realName, aBool);
 				else
@@ -1579,5 +1576,285 @@ public class MsoHeatUtils extends MsoCommonUtils {
 		}
 		return newInputs;
 	}
-
+	
+	
+	/*
+	 * Create a string suitable for being dumped to a debug log that creates a 
+	 * pseudo-JSON request dumping what's being sent to Openstack API in the create or update request
+	 */
+	
+	private String printStackRequest(String tenantId, 
+			Map<String, Object> heatFiles,
+			Map<String, Object> nestedTemplates,
+			String environment,
+			Map<String, Object> inputs, 
+			String vfModuleName,
+			String template,
+			int timeoutMinutes,
+			boolean backout,
+			String cloudSiteId) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("CREATE STACK REQUEST (formatted for readability)\n");
+		sb.append("tenant=" + tenantId + ", cloud=" + cloudSiteId);
+		sb.append("{\n");
+		sb.append("  \"stack_name\": \"" + vfModuleName + "\",\n");
+		sb.append("  \"disable_rollback\": " + backout + ",\n");
+		sb.append("  \"timeout_mins\": " + timeoutMinutes + ",\n"); 
+		sb.append("  \"template\": {\n");
+		sb.append(template);
+		sb.append("  },\n");
+		sb.append("  \"environment\": {\n");
+		if (environment == null) 
+			sb.append("<none>");
+		else 
+			sb.append(environment);
+		sb.append("  },\n");
+		sb.append("  \"files\": {\n");
+		int filesCounter = 0;
+		if (heatFiles != null) {
+			for (String key : heatFiles.keySet()) {
+				filesCounter++;
+				if (filesCounter > 1) {
+					sb.append(",\n");
+				}
+				sb.append("    \"" + key + "\": {\n");
+				sb.append(heatFiles.get(key).toString() + "\n    }");
+			}
+		}
+		if (nestedTemplates != null) {
+			for (String key : nestedTemplates.keySet()) {
+				filesCounter++;
+				if (filesCounter > 1) {
+					sb.append(",\n");
+				}
+				sb.append("    \"" + key + "\": {\n");
+				sb.append(nestedTemplates.get(key).toString() + "\n    }");
+			}
+		}
+		sb.append("\n  },\n");
+		sb.append("  \"parameters\": {\n");
+		int paramCounter = 0;
+		for (String name : inputs.keySet()) {
+			paramCounter++;
+			if (paramCounter > 1) {
+				sb.append(",\n");
+			}
+			Object o = inputs.get(name);
+			if (o instanceof java.lang.String) {
+				sb.append("    \"" + name + "\": \"" + inputs.get(name).toString() + "\"");
+			} else if (o instanceof Integer) {
+				sb.append("    \"" + name + "\": " + inputs.get(name).toString() );
+			} else if (o instanceof ArrayList) {
+				sb.append("    \"" + name + "\": " + inputs.get(name).toString() );
+			} else if (o instanceof Boolean) {
+				sb.append("    \"" + name + "\": " + inputs.get(name).toString() );
+			} else {
+				sb.append("    \"" + name + "\": " + "\"(there was an issue trying to dump this value...)\"" );
+			}
+		}
+		sb.append("\n  }\n}\n");
+		
+		return sb.toString();
+	}
+	
+	/*******************************************************************************
+     * 
+     * Methods (and associated utilities) to implement the VduPlugin interface
+     * 
+     *******************************************************************************/
+    
+    /**
+     * VduPlugin interface for instantiate function.
+     * 
+     * Translate the VduPlugin parameters to the corresponding 'createStack' parameters,
+     * and then invoke the existing function.
+     */
+    public VduInstance instantiateVdu (
+			CloudInfo cloudInfo,
+			String instanceName,
+			Map<String,Object> inputs,
+			VduModelInfo vduModel,
+			boolean rollbackOnFailure)
+    	throws VduException
+    {
+    	String cloudSiteId = cloudInfo.getCloudSiteId();
+    	String tenantId = cloudInfo.getTenantId();
+    	
+    	// Translate the VDU ModelInformation structure to that which is needed for
+    	// creating the Heat stack.  Loop through the artifacts, looking specifically
+    	// for MAIN_TEMPLATE and ENVIRONMENT.  Any other artifact will
+    	// be attached as a FILE.
+    	String heatTemplate = null;
+    	Map<String,Object> nestedTemplates = new HashMap<>();
+    	Map<String,Object> files = new HashMap<>();
+    	String heatEnvironment = null;
+    	
+    	for (VduArtifact vduArtifact: vduModel.getArtifacts()) {
+    		if (vduArtifact.getType() == ArtifactType.MAIN_TEMPLATE) {
+    			heatTemplate = new String(vduArtifact.getContent());
+    		}
+    		else if (vduArtifact.getType() == ArtifactType.NESTED_TEMPLATE) {
+    			nestedTemplates.put(vduArtifact.getName(), new String(vduArtifact.getContent()));
+    		}
+    		else if (vduArtifact.getType() == ArtifactType.ENVIRONMENT) {
+    			heatEnvironment = new String(vduArtifact.getContent());
+    		}
+    	}
+    	
+    	try {
+    	    StackInfo stackInfo = createStack (cloudSiteId,
+                    tenantId,
+                    instanceName,
+                    heatTemplate,
+                    inputs,
+                    true,	// poll for completion
+                    vduModel.getTimeoutMinutes(),
+                    heatEnvironment,
+                    nestedTemplates,
+                    files,
+                    rollbackOnFailure);
+    		
+    	    // Populate a vduInstance from the StackInfo
+        	VduInstance vduInstance = stackInfoToVduInstance(stackInfo);
+        	
+        	return vduInstance;
+    	}
+    	catch (Exception e) {
+    		throw new VduException ("MsoHeatUtils (instantiateVDU): createStack Exception", e);
+    	}
+    }
+    
+    
+    /**
+     * VduPlugin interface for query function.
+     */
+    public VduInstance queryVdu (CloudInfo cloudInfo, String instanceId)
+    	throws VduException
+    {
+    	String cloudSiteId = cloudInfo.getCloudSiteId();
+    	String tenantId = cloudInfo.getTenantId();
+    	
+    	try {
+    		// Query the Cloudify Deployment object and  populate a VduInstance
+    		StackInfo stackInfo = queryStack (cloudSiteId, tenantId, instanceId);
+    		
+        	VduInstance vduInstance = stackInfoToVduInstance(stackInfo);
+        	
+        	return vduInstance;
+    	}
+    	catch (Exception e) {
+    		throw new VduException ("MsoHeatUtile (queryVdu): queryStack Exception ", e);
+    	}
+    }
+    
+    
+    /**
+     * VduPlugin interface for delete function.
+     */
+    public VduInstance deleteVdu (CloudInfo cloudInfo, String instanceId, int timeoutMinutes)
+    	throws VduException
+    {
+    	String cloudSiteId = cloudInfo.getCloudSiteId();
+    	String tenantId = cloudInfo.getTenantId();
+    	
+    	try {
+    		// Delete the Heat stack
+    		StackInfo stackInfo = deleteStack (tenantId, cloudSiteId, instanceId, true);
+    		
+    		// Populate a VduInstance based on the deleted Cloudify Deployment object
+        	VduInstance vduInstance = stackInfoToVduInstance(stackInfo);
+        	
+        	// Override return state to DELETED (HeatUtils sets to NOTFOUND)
+        	vduInstance.getStatus().setState(VduStateType.DELETED);
+        	
+        	return vduInstance;
+    	}
+    	catch (Exception e) {
+    		throw new VduException ("Delete VDU Exception", e);
+    	}
+    }
+    
+    
+    /**
+     * VduPlugin interface for update function.
+     * 
+     * Update is currently not supported in the MsoHeatUtils implementation of VduPlugin.
+     * Just return a VduException.
+     * 
+     */
+    public VduInstance updateVdu (
+			CloudInfo cloudInfo,
+			String instanceId,
+			Map<String,Object> inputs,
+			VduModelInfo vduModel,
+			boolean rollbackOnFailure)
+    	throws VduException
+    {
+    	throw new VduException ("MsoHeatUtils: updateVdu interface not supported");
+    }
+    
+    	
+    /*
+     * Convert the local DeploymentInfo object (Cloudify-specific) to a generic VduInstance object
+     */
+    private VduInstance stackInfoToVduInstance (StackInfo stackInfo)
+    {
+    	VduInstance vduInstance = new VduInstance();
+    	
+    	// The full canonical name as the instance UUID
+    	vduInstance.setVduInstanceId(stackInfo.getCanonicalName());
+    	vduInstance.setVduInstanceName(stackInfo.getName());
+    	
+    	// Copy inputs and outputs
+    	vduInstance.setInputs(stackInfo.getParameters());
+    	vduInstance.setOutputs(stackInfo.getOutputs());
+    	
+    	// Translate the status elements
+    	vduInstance.setStatus(stackStatusToVduStatus (stackInfo));
+    	
+    	return vduInstance;
+    }
+    
+    private VduStatus stackStatusToVduStatus (StackInfo stackInfo)
+    {
+    	VduStatus vduStatus = new VduStatus();
+    	
+    	// Map the status fields to more generic VduStatus.
+    	// There are lots of HeatStatus values, so this is a bit long...
+    	HeatStatus heatStatus = stackInfo.getStatus();
+    	String statusMessage = stackInfo.getStatusMessage();
+    	
+    	if (heatStatus == HeatStatus.INIT  ||  heatStatus == HeatStatus.BUILDING) {
+    		vduStatus.setState(VduStateType.INSTANTIATING);
+    		vduStatus.setLastAction((new PluginAction ("create", "in_progress", statusMessage)));
+    	}
+    	else if (heatStatus == HeatStatus.NOTFOUND) {
+    		vduStatus.setState(VduStateType.NOTFOUND);
+    	}
+    	else if (heatStatus == HeatStatus.CREATED) {
+    		vduStatus.setState(VduStateType.INSTANTIATED);
+    		vduStatus.setLastAction((new PluginAction ("create", "complete", statusMessage)));
+    	}
+    	else if (heatStatus == HeatStatus.UPDATED) {
+    		vduStatus.setState(VduStateType.INSTANTIATED);
+    		vduStatus.setLastAction((new PluginAction ("update", "complete", statusMessage)));
+    	}
+    	else if (heatStatus == HeatStatus.UPDATING) {
+    		vduStatus.setState(VduStateType.UPDATING);
+    		vduStatus.setLastAction((new PluginAction ("update", "in_progress", statusMessage)));
+    	}
+    	else if (heatStatus == HeatStatus.DELETING) {
+    		vduStatus.setState(VduStateType.DELETING);
+    		vduStatus.setLastAction((new PluginAction ("delete", "in_progress", statusMessage)));
+    	}
+    	else if (heatStatus == HeatStatus.FAILED) {
+    		vduStatus.setState(VduStateType.FAILED);
+        	vduStatus.setErrorMessage(stackInfo.getStatusMessage());
+    	} else {
+    		vduStatus.setState(VduStateType.UNKNOWN);
+    	}
+    	
+    	return vduStatus;
+    }
+	
 }

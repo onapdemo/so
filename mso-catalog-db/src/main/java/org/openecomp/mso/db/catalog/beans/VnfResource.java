@@ -35,21 +35,22 @@ public class VnfResource extends MavenLikeVersioning implements Serializable {
 	
 	private static final long serialVersionUID = 768026109321305392L;
 
-	private String modelUuid;
-	private String modelInvariantUuid;
-	private String modelName;
-    private String toscaNodeType;
-    private String description;
-    private String orchestrationMode;
-    private String aicVersionMin;
-    private String aicVersionMax;
-    private String heatTemplateArtifactUUId;
-    private Timestamp created;
-    private String modelVersion;
-    private Set<VnfResourceCustomization> vnfResourceCustomizations;
-    private Set<VfModule> vfModules;
-    private List<VfModule> vfModuleList;
-    private List<VfModuleCustomization> vfModuleCustomizations;
+	private String modelUuid = null;
+	private String modelInvariantUuid = null;
+	private String modelName = null;
+    private String toscaNodeType = null;
+    private String description = null;
+    private String orchestrationMode = null;
+    private String aicVersionMin = null;
+    private String aicVersionMax = null;
+    private String category = null;
+    private String subCategory = null;
+    private String heatTemplateArtifactUUId = null;
+    private Timestamp created = null;
+    private String modelVersion = null;
+    private Set<VnfResourceCustomization> vnfResourceCustomizations = new HashSet<>();
+    private Set<VfModule> vfModules = new HashSet<>();
+    private List<VfModuleCustomization> vfModuleCustomizations = new ArrayList<>();
 
     public VnfResource () { }
 
@@ -108,7 +109,39 @@ public class VnfResource extends MavenLikeVersioning implements Serializable {
 		this.aicVersionMax = aicVersionMax;
 	}
 
-	public String getModelInvariantUuid() {
+	
+    /**
+     * @return Returns the category.
+     */
+    public String getCategory() {
+        return category;
+    }
+
+    
+    /**
+     * @param category The category to set.
+     */
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    
+    /**
+     * @return Returns the subCategory.
+     */
+    public String getSubCategory() {
+        return subCategory;
+    }
+
+    
+    /**
+     * @param subCategory The subCategory to set.
+     */
+    public void setSubCategory(String subCategory) {
+        this.subCategory = subCategory;
+    }
+
+    public String getModelInvariantUuid() {
 		return this.modelInvariantUuid;
 	}
 
@@ -161,9 +194,9 @@ public class VnfResource extends MavenLikeVersioning implements Serializable {
 	}
 
 	public List<VfModuleCustomization> getVfModuleCustomizations() {
-		return this.vfModuleCustomizations == null ? new ArrayList<VfModuleCustomization>() : this.vfModuleCustomizations;
+		return this.vfModuleCustomizations == null ? new ArrayList<>() : this.vfModuleCustomizations;
 	}
-	public void setVfModuleCustomizations(ArrayList<VfModuleCustomization> vfModuleCustomizations) {
+	public void setVfModuleCustomizations(List<VfModuleCustomization> vfModuleCustomizations) {
 		this.vfModuleCustomizations = vfModuleCustomizations;
 	}
 	public void addVfModuleCustomization(VfModuleCustomization vfmc) {
@@ -171,7 +204,7 @@ public class VnfResource extends MavenLikeVersioning implements Serializable {
 			if (this.vfModuleCustomizations != null) {
 				this.vfModuleCustomizations.add(vfmc);
 			} else {
-				this.vfModuleCustomizations = new ArrayList<VfModuleCustomization>();
+				this.vfModuleCustomizations = new ArrayList<>();
 				this.vfModuleCustomizations.add(vfmc);
 			}
 	}
@@ -182,7 +215,7 @@ public class VnfResource extends MavenLikeVersioning implements Serializable {
 			if (this.vfModules != null) {
 				this.vfModules.add(vfm);
 			} else {
-				this.vfModules = new HashSet<VfModule>();
+				this.vfModules = new HashSet<>();
 				this.vfModules.add(vfm);
 			}
 		}
@@ -191,10 +224,8 @@ public class VnfResource extends MavenLikeVersioning implements Serializable {
 		if (this.vfModules == null || this.vfModules.size() < 1) {
 			return null;
 	}
-		ArrayList<VfModule> list = new ArrayList<VfModule>();
-		for (VfModule vfm : this.vfModules) {
-			list.add(vfm);
-	}
+		ArrayList<VfModule> list = new ArrayList<>();
+		list.addAll(this.vfModules);
 		return list;
 	}
 	
@@ -208,45 +239,45 @@ public class VnfResource extends MavenLikeVersioning implements Serializable {
 
 	@Override
 	public String toString () {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 
-		buf.append("VNF=");
-		buf.append(",modelVersion=");
-		buf.append(modelVersion);
-		buf.append(",mode=");
-		buf.append(orchestrationMode);
-		buf.append(",heatTemplateArtifactUUId=");
-		buf.append(heatTemplateArtifactUUId);
-		buf.append(",envtId=");
-		buf.append(",asdcUuid=");
-		buf.append(",aicVersionMin=");
-		buf.append(this.aicVersionMin);
-		buf.append(",aicVersionMax=");
-		buf.append(this.aicVersionMax);
-        buf.append(",modelInvariantUuid=");
-        buf.append(this.modelInvariantUuid);
-        buf.append(",modelVersion=");
-        buf.append(",modelCustomizationName=");
-        buf.append(",modelName=");
-        buf.append(this.modelName);
-        buf.append(",serviceModelInvariantUUID=");
-		buf.append(",modelCustomizationUuid=");
-        buf.append(",toscaNodeType=");
-        buf.append(toscaNodeType);
+		sb.append("VNF=");
+		sb.append(",modelVersion=");
+		sb.append(modelVersion);
+		sb.append(",mode=");
+		sb.append(orchestrationMode);
+		sb.append(",heatTemplateArtifactUUId=");
+		sb.append(heatTemplateArtifactUUId);
+		sb.append(",envtId=");
+		sb.append(",asdcUuid=");
+		sb.append(",aicVersionMin=");
+		sb.append(this.aicVersionMin);
+		sb.append(",aicVersionMax=");
+		sb.append(this.aicVersionMax);
+        sb.append(",modelInvariantUuid=");
+        sb.append(this.modelInvariantUuid);
+        sb.append(",modelVersion=");
+        sb.append(",modelCustomizationName=");
+        sb.append(",modelName=");
+        sb.append(this.modelName);
+        sb.append(",serviceModelInvariantUUID=");
+		sb.append(",modelCustomizationUuid=");
+        sb.append(",toscaNodeType=");
+        sb.append(toscaNodeType);
 
 		if (created != null) {
-			buf.append(",created=");
-			buf.append(DateFormat.getInstance().format(created));
+			sb.append(",created=");
+			sb.append(DateFormat.getInstance().format(created));
 		}
 		
 		for(VnfResourceCustomization vrc : vnfResourceCustomizations) {
-			buf.append("/n" + vrc.toString());
+			sb.append("/n").append(vrc.toString());
 			}
 		
 		for(VfModule vfm : vfModules) {
-			buf.append("/n" + vfm.toString());
+			sb.append("/n").append(vfm.toString());
 		}
-		return buf.toString();
+		return sb.toString();
     }
 
 }

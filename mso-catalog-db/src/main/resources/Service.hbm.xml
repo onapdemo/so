@@ -39,8 +39,15 @@
 		<property name="modelInvariantUUID" type="string">
            <column name="MODEL_INVARIANT_UUID" default="'MANUAL_RECORD'" not-null="true" length="200"/>
         </property>
+        <property name="category" 				column="SERVICE_CATEGORY" 				type="string" 		length="20"/>
         <property name="serviceType" 				column="SERVICE_TYPE" 				type="string" 		length="20"/>
         <property name="serviceRole" 				column="SERVICE_ROLE" 				type="string" 		length="20"/>
+        <property name="environmentContext" 		type="string" 		length="200">
+          <column name="ENVIRONMENT_CONTEXT" default="null"/>
+        </property>
+        <property name="workloadContext" 			type="string" 		length="200">
+          <column name="WORKLOAD_CONTEXT" default="null"/>
+        </property>
         
 		<map name="recipes" inverse="true" cascade="all">
 			<key column="SERVICE_MODEL_UUID"/>

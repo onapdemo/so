@@ -3,11 +3,6 @@
   <display-name>mso-multivim-adapter</display-name>
 
   <context-param>
-	<param-name>resteasy.jndi.resources</param-name>
-	<param-value>java:module/MsoPropertiesFactory,java:module/CloudConfigFactory</param-value>
-  </context-param>
-
-  <context-param>
     <param-name>log.configuration</param-name>
     <param-value>logback.multivim.xml</param-value>
   </context-param>

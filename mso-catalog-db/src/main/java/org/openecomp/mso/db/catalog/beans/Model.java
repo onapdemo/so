@@ -31,14 +31,14 @@ public class Model extends MavenLikeVersioning implements Serializable {
 	private static final long serialVersionUID = 768026109321305392L;
 
 	private int id;
-	private String modelCustomizationId;
-	private String modelCustomizationName;
-	private String modelInvariantId;
-	private String modelName;
-	private String modelType;
-	private String modelVersion;
-	private String modelVersionId;
-	private Timestamp created;
+	private String modelCustomizationId = null;
+	private String modelCustomizationName = null;
+	private String modelInvariantId = null;
+	private String modelName = null;
+	private String modelType = null;
+	private String modelVersion = null;
+	private String modelVersionId = null;
+	private Timestamp created = null;
 	private Map<String,ServiceRecipe> recipes;
 
 	/**
@@ -185,13 +185,13 @@ public class Model extends MavenLikeVersioning implements Serializable {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Model: ");
-		sb.append("modelCustomizationId=" + modelCustomizationId);
-		sb.append(",modelCustomizationName=" + modelCustomizationName);
-		sb.append(",modelInvariantId=" + modelInvariantId);
-		sb.append(",modelName=" + modelName);
-		sb.append(",modelType=" + modelType);
-		sb.append(",modelVersion=" + modelVersion);
-		sb.append(",modelVersionId=" + modelVersionId);
+		sb.append("modelCustomizationId=").append(modelCustomizationId);
+		sb.append(",modelCustomizationName=").append(modelCustomizationName);
+		sb.append(",modelInvariantId=").append(modelInvariantId);
+		sb.append(",modelName=").append(modelName);
+		sb.append(",modelType=").append(modelType);
+		sb.append(",modelVersion=").append(modelVersion);
+		sb.append(",modelVersionId=").append(modelVersionId);
         if (created != null) {
 	        sb.append (",created=");
 	        sb.append (DateFormat.getInstance().format(created));

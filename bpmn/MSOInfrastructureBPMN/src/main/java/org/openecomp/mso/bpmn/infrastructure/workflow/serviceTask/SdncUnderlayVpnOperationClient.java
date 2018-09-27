@@ -35,13 +35,10 @@ import org.openecomp.mso.requestsdb.ResourceOperationStatus;
 
 import java.util.Map;
 
-/**
- * Created by 10112215 on 2017/9/21.
- */
 public class SdncUnderlayVpnOperationClient {
 
     private static final String DEFAULT_MSB_IP = "127.0.0.1";
-    private static final int DEFAULT_MSB_Port = 10081;
+    private static final int DEFAULT_MSB_PORT = 10081;
     private RequestsDatabase requestsDB = RequestsDatabase.getInstance();
 
     private String serviceId;
@@ -54,11 +51,11 @@ public class SdncUnderlayVpnOperationClient {
     public boolean excute(String msbIp,
                        int msbPort,
                        Map<String, String> inputs,
-                       String serviceId_i,
-                       String operationId_i,
+                       String iServiceID,
+                       String iOperationID,
                        String resourceTemplateUUID_i){
-        serviceId = serviceId_i;
-        operationId = operationId_i;
+        serviceId = iServiceID;
+        operationId = iOperationID;
         resourceTemplateUUID = resourceTemplateUUID_i;
         GenericResourceApi genericResourceApiClient = getGenericResourceApiClient(msbIp, msbPort);
         updateProgress(RequestsDbConstant.Status.PROCESSING, null, "10", "execute begin!");
@@ -70,17 +67,15 @@ public class SdncUnderlayVpnOperationClient {
         NetworkRpcInputEntityBuilder builder = new NetworkRpcInputEntityBuilder();
         RpcNetworkTopologyOperationInputEntity body = builder.build(null, inputs);
         updateProgress(null, null, "50", "RequestBody build finished!");
-        RpcNetworkTopologyOperationOutputEntity networkRpcOutputEntiy = null;
+        //RpcNetworkTopologyOperationOutputEntity networkRpcOutputEntiy = null;
         try {
-            networkRpcOutputEntiy = genericResourceApiClient.postNetworkTopologyOperation
-                    (HeaderUtil.DefaulAuth ,body).execute().body();
+            genericResourceApiClient.postNetworkTopologyOperation(HeaderUtil.DefaulAuth ,body).execute().body();
         } catch (Exception e) {
             logger.debug("Exception: ", e);
             updateProgress(RequestsDbConstant.Status.ERROR, null, null, "sendRestrequestAndHandleResponse exception:" + e.getMessage());
             return false;
         }
         updateProgress(null, null, "90", "sendRestrequestAndHandleResponse finished!");
-        saveOutput(networkRpcOutputEntiy);
         updateProgress(RequestsDbConstant.Status.FINISHED, null, RequestsDbConstant.Progress.ONE_HUNDRED, "execute finished!");
         return true;
     }
@@ -90,7 +85,7 @@ public class SdncUnderlayVpnOperationClient {
             msbIp = DEFAULT_MSB_IP;
         }
         if (msbPort <= 0) {
-            msbPort = DEFAULT_MSB_Port;
+            msbPort = DEFAULT_MSB_PORT;
         }
         MSBServiceClient msbClient = new MSBServiceClient(msbIp, msbPort);
         RestServiceCreater restServiceCreater = new RestServiceCreater(msbClient);
@@ -117,7 +112,7 @@ public class SdncUnderlayVpnOperationClient {
         requestsDB.updateResOperStatus(resourceOperationStatus);
     }
 
-    private void saveOutput(RpcNetworkTopologyOperationOutputEntity output) {
-
+    private void saveOutput() {
+        // Not implemented.
     }
 }

@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.openecomp.sdc.api.notification.IVfModuleMetadata;
+import org.onap.sdc.api.notification.IVfModuleMetadata;
 import org.openecomp.mso.asdc.client.ASDCConfiguration;
 import org.openecomp.mso.asdc.client.exceptions.ArtifactInstallerException;
 import org.openecomp.mso.db.catalog.beans.VfModule;
@@ -47,7 +47,7 @@ public final class VfModuleStructure {
 		vfModuleMetadata = vfmoduleMetadata;
 		parentVfResource = vfParentResource;
 
-		artifactsMap = new HashMap<String, List<VfModuleArtifact>>();
+		artifactsMap = new HashMap<>();
 
 		for (String artifactUUID:this.vfModuleMetadata.getArtifacts()) {
 			if (vfParentResource.getArtifactsMapByUUID().containsKey(artifactUUID)) {
@@ -64,7 +64,7 @@ public final class VfModuleStructure {
 			artifactsMap.get(vfModuleArtifact.getArtifactInfo().getArtifactType()).add(vfModuleArtifact);
 
 		} else {
-			List<VfModuleArtifact> nestedList = new LinkedList<VfModuleArtifact>();
+			List<VfModuleArtifact> nestedList = new LinkedList<>();
 			nestedList.add(vfModuleArtifact);
 
 			artifactsMap.put(vfModuleArtifact.getArtifactInfo().getArtifactType(), nestedList);
@@ -73,19 +73,15 @@ public final class VfModuleStructure {
 
 	public List<VfModuleArtifact> getOrderedArtifactList() {
 
-		List <VfModuleArtifact> artifactsList = new LinkedList <VfModuleArtifact>();
+		List <VfModuleArtifact> artifactsList = new LinkedList<>();
 
 		artifactsList.addAll(artifactsMap.get(ASDCConfiguration.HEAT));
 		artifactsList.addAll(artifactsMap.get(ASDCConfiguration.HEAT_ENV));
 		artifactsList.addAll(artifactsMap.get(ASDCConfiguration.HEAT_VOL));
 
-		for (VfModuleArtifact artifact:(artifactsMap.get(ASDCConfiguration.HEAT_NESTED))) {
-			artifactsList.add(artifact);
-		}
+		artifactsList.addAll((artifactsMap.get(ASDCConfiguration.HEAT_NESTED)));
 
-		for (VfModuleArtifact artifact:(artifactsMap.get(ASDCConfiguration.HEAT_ARTIFACT))) {
-			artifactsList.add(artifact);
-		}
+		artifactsList.addAll((artifactsMap.get(ASDCConfiguration.HEAT_ARTIFACT)));
 
 		artifactsList.addAll(artifactsMap.get(ASDCConfiguration.HEAT_VOL));
 

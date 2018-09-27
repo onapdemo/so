@@ -23,8 +23,18 @@ package org.openecomp.mso.bpmn.infrastructure.scripts;
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
+import javax.xml.parsers.DocumentBuilder
+import javax.xml.parsers.DocumentBuilderFactory
+
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import org.w3c.dom.Node
+import org.w3c.dom.NodeList
+import org.xml.sax.InputSource
+
 import org.camunda.bpm.engine.delegate.BpmnError
-import org.camunda.bpm.engine.runtime.Execution
+import org.camunda.bpm.engine.delegate.DelegateExecution
+import org.onap.appc.client.lcm.model.Action
 import org.apache.commons.lang3.*
 import org.openecomp.mso.bpmn.common.scripts.AbstractServiceTaskProcessor;
 import org.openecomp.mso.bpmn.common.scripts.ExceptionUtil;
@@ -34,17 +44,25 @@ import org.openecomp.mso.bpmn.common.scripts.VidUtils;
 import org.openecomp.mso.bpmn.core.RollbackData
 import org.openecomp.mso.bpmn.core.WorkflowException
 import org.openecomp.mso.bpmn.core.json.JsonUtils
+import org.openecomp.mso.bpmn.infrastructure.aai.AAICreateResources;
+import org.onap.aai.domain.yang.v12.GenericVnf;
 
 public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 
 	ExceptionUtil exceptionUtil = new ExceptionUtil()
 	JsonUtils jsonUtil = new JsonUtils()
+	
+	private AbstractServiceTaskProcessor taskProcessor
+	
+	public SDNCAdapterUtils(AbstractServiceTaskProcessor taskProcessor) {
+		this.taskProcessor = taskProcessor
+	}	
 
 	/**
 	 * Validates the request message and sets up the workflow.
 	 * @param execution the execution
 	 */
-	public void preProcessRequest(Execution execution) {
+	public void preProcessRequest(DelegateExecution execution) {
 		def method = getClass().getSimpleName() + '.preProcessRequest(' +
 			'execution=' + execution.getId() +
 			')'
@@ -127,7 +145,7 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 			Map<String, String> userParamsMap = [:]
 			if (userParams != null) {
 				userParams.each { userParam ->
-					userParamsMap.put(userParam.name, userParam.value)
+					userParamsMap.put(userParam.name, jsonOutput.toJson(userParam.value).toString())
 				}							
 			}		
 						
@@ -171,6 +189,9 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 			def usePreload = reqMap.requestDetails?.requestParameters?.usePreload
 			execution.setVariable(prefix + 'usePreload', usePreload)
 			
+			// This is aLaCarte flow, so aLaCarte flag is always on				
+			execution.setVariable(prefix + 'aLaCarte', true)
+			
 			def cloudConfiguration = reqMap.requestDetails?.cloudConfiguration
 			def lcpCloudRegionId	= cloudConfiguration.lcpCloudRegionId
 			execution.setVariable(prefix + 'lcpCloudRegionId', lcpCloudRegionId)
@@ -209,6 +230,12 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 			def newVfModuleId = UUID.randomUUID().toString()
 			execution.setVariable("newVfModuleId", newVfModuleId)
 			execution.setVariable(prefix + 'vfModuleId', newVfModuleId)
+			execution.setVariable('actionHealthCheck', Action.HealthCheck)
+			execution.setVariable('actionConfigScaleOut', Action.ConfigScaleOut)
+			execution.setVariable('controllerType', "APPC")
+			def controllerType = execution.getVariable('controllerType')
+			execution.setVariable(prefix + 'controllerType', controllerType)
+			execution.setVariable('healthCheckIndex0', 0)
 
 			logDebug('RequestInfo: ' + execution.getVariable("CVFMI_requestInfo"), isDebugLogEnabled)			
 			
@@ -239,7 +266,7 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 	 * @param responseCodeVar the execution variable in which the response code is stored
 	 * @param errorResponseVar the execution variable in which the error response is stored
 	 */
-	public void validateWorkflowResponse(Execution execution, String responseVar,
+	public void validateWorkflowResponse(DelegateExecution execution, String responseVar,
 			String responseCodeVar, String errorResponseVar) {
 		SDNCAdapterUtils sdncAdapterUtils = new SDNCAdapterUtils(this)
 		sdncAdapterUtils.validateSDNCResponse(execution, responseVar, responseCodeVar, errorResponseVar)
@@ -250,7 +277,7 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 	 * Sends the empty, synchronous response back to the API Handler.
 	 * @param execution the execution
 	 */
-	public void sendResponse(Execution execution) {
+	public void sendResponse(DelegateExecution execution) {
 		def method = getClass().getSimpleName() + '.sendResponse(' +
 			'execution=' + execution.getId() +
 			')'
@@ -278,12 +305,75 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 			exceptionUtil.buildAndThrowWorkflowException(execution, 1002, 'Error in sendResponse(): ' + e.getMessage())
 		}
 	}
+	
+	/**
+	 * Query AAI for vnf orchestration status to determine if health check and config scaling should be run
+	 */
+	public void queryAAIForVnfOrchestrationStatus(DelegateExecution execution) {
+		def isDebugEnabled = execution.getVariable("isDebugLogEnabled")
+		def vnfId = execution.getVariable("CVFMI_vnfId")
+		execution.setVariable("runHealthCheck", false);
+		execution.setVariable("runConfigScaleOut", false);
+		AAICreateResources aaiCreateResources = new AAICreateResources();
+		Optional<GenericVnf> vnf = aaiCreateResources.getVnfInstance(vnfId);
+		if(vnf.isPresent()){
+			def vnfOrchestrationStatus = vnf.get().getOrchestrationStatus();
+			if("active".equalsIgnoreCase(vnfOrchestrationStatus)){
+				execution.setVariable("runHealthCheck", false);
+				execution.setVariable("runConfigScaleOut", true);
+			}
+		}
+	}
+	
+	/**
+	 * Retrieve data for ConfigScaleOut from SDNC topology
+	 */
+	
+	public void retreiveConfigScaleOutData(DelegateExecution execution){
+		def isDebugEnabled = execution.getVariable("isDebugLogEnabled")
+		def vfModuleId = execution.getVariable("CVFMI_vfModuleId")
+		String ipAddress = "";
+		String oamIpAddress = "";
+		String vnfHostIpAddress = "";
+
+		String vnfGetSDNC = execution.getVariable("DCVFM_getSDNCAdapterResponse");
+
+		String data = utils.getNodeXml(vnfGetSDNC, "response-data")
+		data = data.replaceAll("&lt;", "<")
+		data = data.replaceAll("&gt;", ">")
+
+		InputSource source = new InputSource(new StringReader(data));
+		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+		docFactory.setNamespaceAware(true)
+		DocumentBuilder docBuilder = docFactory.newDocumentBuilder()
+		Document responseXml = docBuilder.parse(source)
+
+		NodeList paramsList = responseXml.getElementsByTagNameNS("*", "vnf-parameters")
+		for (int z = 0; z < paramsList.getLength(); z++) {
+			Node node = paramsList.item(z)
+			Element eElement = (Element) node
+			String vnfParameterName = utils.getElementText(eElement, "vnf-parameter-name")
+			String vnfParameterValue = utils.getElementText(eElement, "vnf-parameter-value")
+			if (vnfParameterName.equals("vlb_private_ip_1")) {
+				vnfHostIpAddress = vnfParameterValue
+			}
+			else if (vnfParameterName.equals("vdns_private_ip_0")) {
+				ipAddress = vnfParameterValue
+			}
+			else if (vnfParameterName.equals("vdns_private_ip_1")) {			
+				oamIpAddress = vnfParameterValue
+			}
+		}
+
+		String payload = "{\"request-parameters\":{\"vnf-host-ip-address\":\"" + vnfHostIpAddress + "\",\"vf-module-id\":\"" + vfModuleId + "\"},\"configuration-parameters\":{\"ip-addr\":\"" + ipAddress +"\", \"oam-ip-addr\":\""+ oamIpAddress +"\",\"enabled\":\"true\"}}"
+		execution.setVariable("payload", payload);
+	}
 
 	/**
 	 *
 	 * @param execution the execution
 	 */
-	public void postProcessResponse(Execution execution){
+	public void postProcessResponse(DelegateExecution execution){
 		def isDebugEnabled = execution.getVariable("isDebugLogEnabled")
 
 		utils.log("DEBUG", " ======== STARTED PostProcessResponse Process ======== ", isDebugEnabled)
@@ -329,7 +419,7 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 	 * @param execution the execution
 	 * @return the validated request
 	 */
-	public String validateInfraRequest(Execution execution) {
+	public String validateInfraRequest(DelegateExecution execution) {
 		def method = getClass().getSimpleName() + '.validateInfraRequest(' +
 			'execution=' + execution.getId() +
 			')'
@@ -392,7 +482,7 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 		}
 	}
 
-	public void prepareUpdateInfraRequest(Execution execution){
+	public void prepareUpdateInfraRequest(DelegateExecution execution){
 		def isDebugEnabled = execution.getVariable("isDebugLogEnabled")
 
 		utils.log("DEBUG", " ======== STARTED prepareUpdateInfraRequest Process ======== ", isDebugEnabled)
@@ -449,7 +539,7 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 	 * @param execution the execution
 	 * @param resultVar the execution variable in which the result will be stored
 	 */
-	public void falloutHandlerPrep(Execution execution, String resultVar) {
+	public void falloutHandlerPrep(DelegateExecution execution, String resultVar) {
 		def method = getClass().getSimpleName() + '.falloutHandlerPrep(' +
 			'execution=' + execution.getId() +
 			', resultVar=' + resultVar +
@@ -496,7 +586,7 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 		}
 	}
 
-	public void logAndSaveOriginalException(Execution execution) {
+	public void logAndSaveOriginalException(DelegateExecution execution) {
 		def method = getClass().getSimpleName() + '.validateRollbackResponse(' +
 			'execution=' + execution.getId() +
 			')'
@@ -507,7 +597,7 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 		saveWorkflowException(execution, 'CVFMI_originalWorkflowException')
 	}
 
-	public void validateRollbackResponse(Execution execution) {
+	public void validateRollbackResponse(DelegateExecution execution) {
 		def method = getClass().getSimpleName() + '.validateRollbackResponse(' +
 			'execution=' + execution.getId() +
 			')'
@@ -521,7 +611,7 @@ public class CreateVfModuleInfra extends AbstractServiceTaskProcessor {
 
 	}
 	
-	public void sendErrorResponse(Execution execution){
+	public void sendErrorResponse(DelegateExecution execution){
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 
 		utils.log("DEBUG", " *** STARTED CreateVfModulenfra sendErrorResponse Process *** ", isDebugEnabled)

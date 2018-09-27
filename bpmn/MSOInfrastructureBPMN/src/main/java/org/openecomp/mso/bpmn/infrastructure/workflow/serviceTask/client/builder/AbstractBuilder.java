@@ -33,12 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-//import org.opendaylight.yang.gen.v1.org.onap.sdnc.northbound.generic.resource.rev170824.request.information.RequestInformation;
-//import org.opendaylight.yang.gen.v1.org.onap.sdnc.northbound.generic.resource.rev170824.sdnc.request.header.SdncRequestHeader;
-
-/**
- * Created by 10112215 on 2017/9/20.
- */
 public abstract class AbstractBuilder<IN, OUT> {
 
      public static final String OPERATION_TYPE = "operationType";
@@ -116,7 +110,7 @@ public abstract class AbstractBuilder<IN, OUT> {
      protected String getRequestActoin(DelegateExecution execution) {
           String action = /*RequestInformation.*/RequestAction.CreateNetworkInstance.getName();
           String operType = (String) execution.getVariable(OPERATION_TYPE);
-          String resourceType = ((String) execution.getVariable(RESOURCE_TYPE)).toLowerCase();
+          String resourceType = (String)execution.getVariable(RESOURCE_TYPE);
           if (!StringUtils.isBlank(operType)) {
                if (RequestsDbConstant.OperationType.DELETE.equalsIgnoreCase(operType)) {
                     if (isOverlay(resourceType)) {
@@ -140,17 +134,17 @@ public abstract class AbstractBuilder<IN, OUT> {
      }
 
      private boolean isOverlay(String resourceType) {
-          return !StringUtils.isBlank(resourceType) && resourceType.contains("overlay");
+          return !StringUtils.isBlank(resourceType) && resourceType.toLowerCase().contains("overlay");
      }
 
      private boolean isUnderlay(String resourceType) {
-          return !StringUtils.isBlank(resourceType) && resourceType.contains("underlay");
+          return !StringUtils.isBlank(resourceType) && resourceType.toLowerCase().contains("underlay");
      }
 
      protected String getSvcAction(DelegateExecution execution) {
           String action = /*SdncRequestHeader.*/SvcAction.Create.getName();
           String operType = (String) execution.getVariable(OPERATION_TYPE);
-          String resourceType = ((String) execution.getVariable(RESOURCE_TYPE)).toLowerCase();
+          String resourceType = (String)execution.getVariable(RESOURCE_TYPE);
           if (!StringUtils.isBlank(operType)) {
                if (RequestsDbConstant.OperationType.DELETE.equalsIgnoreCase(operType)) {
                     if (isOverlay(resourceType)) {

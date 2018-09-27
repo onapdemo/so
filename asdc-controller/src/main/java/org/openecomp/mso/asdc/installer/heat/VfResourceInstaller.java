@@ -31,7 +31,7 @@ import java.util.Set;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
-import org.openecomp.sdc.api.notification.IArtifactInfo;
+import org.onap.sdc.api.notification.IArtifactInfo;
 
 import org.openecomp.mso.asdc.client.ASDCConfiguration;
 import org.openecomp.mso.asdc.client.exceptions.ArtifactInstallerException;
@@ -631,7 +631,7 @@ public class VfResourceInstaller implements IVfResourceInstaller {
 			return body;
 		}
 
-		StringBuffer sb = new StringBuffer(body.length());
+		StringBuilder sb = new StringBuilder(body.length());
 
 		int currentIndex = 0;
 		int startIndex = 0;

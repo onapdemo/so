@@ -20,20 +20,15 @@
 
 package org.openecomp.mso.apihandler.common;
 
-import org.openecomp.mso.logger.MessageEnum;
-import org.openecomp.mso.logger.MsoLogger;
+import java.io.IOException;
+
+import javax.xml.bind.DatatypeConverter;
+
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-
-import javax.xml.bind.DatatypeConverter;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
+import org.openecomp.mso.logger.MsoLogger;
 
 public class CamundaTaskClient extends RequestClient{
 	private static MsoLogger msoLogger = MsoLogger.getMsoLogger(MsoLogger.Catalog.APIH);
@@ -43,8 +38,7 @@ public class CamundaTaskClient extends RequestClient{
 	}
 	
 	@Override
-	public HttpResponse post(String jsonReq)
-					throws ClientProtocolException, IOException{
+	public HttpResponse post(String jsonReq) throws IOException{
 		HttpPost post = new HttpPost(url);
 		msoLogger.debug("Camunda Task url is: "+ url);		
 
@@ -57,39 +51,30 @@ public class CamundaTaskClient extends RequestClient{
 			if(encryptedCredentials != null){
 				String userCredentials = getEncryptedPropValue(encryptedCredentials, CommonConstants.DEFAULT_BPEL_AUTH, CommonConstants.ENCRYPTION_KEY);
 				if(userCredentials != null){
-					post.addHeader("Authorization", "Basic " + new String(DatatypeConverter.printBase64Binary(userCredentials.getBytes())));
+					post.addHeader("Authorization", "Basic " + DatatypeConverter
+						.printBase64Binary(userCredentials.getBytes()));
 				}
 			}
 		}
 
 		post.setEntity(input);
-		HttpResponse response = client.execute(post);
-
-		return response;
+		return client.execute(post);
 	}
 	
 	@Override
 	public HttpResponse post(String camundaReqXML, String requestId,
-			String requestTimeout, String schemaVersion, String serviceInstanceId, String action)
-					throws ClientProtocolException, IOException{
+			String requestTimeout, String schemaVersion, String serviceInstanceId, String action) {
 		msoLogger.debug("Method not supported");
 		return null;
 	}
-	
+
 	@Override
-	public HttpResponse post(String requestId, boolean isBaseVfModule,
-			int recipeTimeout, String requestAction, String serviceInstanceId,
-			String vnfId, String vfModuleId, String volumeGroupId, String networkId,
-			String serviceType, String vnfType, String vfModuleType, String networkType,
-			String requestDetails)
-					throws ClientProtocolException, IOException{
-		msoLogger.debug("Method not supported");
+	public HttpResponse post(RequestClientParamater params) {
 		return null;
 	}
-	
+
 	@Override
-	public HttpResponse get()
-			throws ClientProtocolException, IOException{
+	public HttpResponse get() throws IOException{
 		HttpGet get = new HttpGet(url);
 		msoLogger.debug("Camunda Task url is: "+ url);	
 		String encryptedCredentials;
@@ -98,17 +83,12 @@ public class CamundaTaskClient extends RequestClient{
 			if(encryptedCredentials != null){
 				String userCredentials = getEncryptedPropValue(encryptedCredentials, CommonConstants.DEFAULT_BPEL_AUTH, CommonConstants.ENCRYPTION_KEY);
 				if(userCredentials != null){
-					get.addHeader("Authorization", "Basic " + new String(DatatypeConverter.printBase64Binary(userCredentials.getBytes())));
+					get.addHeader("Authorization", "Basic " + new String(DatatypeConverter
+						.printBase64Binary(userCredentials.getBytes())));
 				}
 			}
 		}
-		
-		HttpResponse getResponse = client.execute(get);	
-
-		return getResponse;
-}
-	
-	
-
+		return client.execute(get);
+	}
 
 }

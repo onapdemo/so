@@ -21,15 +21,10 @@
 
 package org.openecomp.mso.openstack.utils;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import org.openecomp.mso.cloud.CloudConfigFactory;
 import org.openecomp.mso.cloud.CloudSite;
@@ -43,12 +38,16 @@ import org.openecomp.mso.openstack.exceptions.MsoStackNotFound;
 import org.openecomp.mso.properties.MsoJavaProperties;
 import org.openecomp.mso.properties.MsoPropertiesException;
 import org.openecomp.mso.properties.MsoPropertiesFactory;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.woorea.openstack.base.client.OpenStackBaseException;
 import com.woorea.openstack.base.client.OpenStackRequest;
 import com.woorea.openstack.heat.Heat;
 import com.woorea.openstack.heat.model.Stack;
-import com.woorea.openstack.heat.model.UpdateStackParam;
 import com.woorea.openstack.heat.model.Stack.Output;
+import com.woorea.openstack.heat.model.UpdateStackParam;
 
 public class MsoHeatUtilsWithUpdate extends MsoHeatUtils {
 
@@ -160,7 +159,7 @@ public class MsoHeatUtilsWithUpdate extends MsoHeatUtils {
      * @param tenantId The Openstack ID of the tenant in which to create the Stack
      * @param cloudSiteId The cloud identifier (may be a region) in which to create the tenant.
      * @param stackName The name of the stack to update
-     * @param stackTemplate The Heat template
+     * @param heatTemplate The Heat template
      * @param stackInputs A map of key/value inputs
      * @param pollForCompletion Indicator that polling should be handled in Java vs. in the client
      * @param environment An optional yaml-format string to specify environmental parameters
@@ -194,10 +193,8 @@ public class MsoHeatUtilsWithUpdate extends MsoHeatUtils {
         }
 
         // Obtain the cloud site information where we will create the stack
-        CloudSite cloudSite = cloudConfig.getCloudSite (cloudSiteId);
-        if (cloudSite == null) {
-            throw new MsoCloudSiteNotFound (cloudSiteId);
-        }
+        CloudSite cloudSite = getCloudConfigFactory().getCloudConfig().getCloudSite(cloudSiteId).orElseThrow(
+                () -> new MsoCloudSiteNotFound(cloudSiteId));
         // Get a Heat client. They are cached between calls (keyed by tenantId:cloudId)
         // This could throw MsoTenantNotFound or MsoOpenstackException (both propagated)
         Heat heatClient = getHeatClient (cloudSite, tenantId);
@@ -233,7 +230,7 @@ public class MsoHeatUtilsWithUpdate extends MsoHeatUtils {
         if (haveFiles && haveHeatFiles) {
             // Let's do this here - not in the bean
             LOGGER.debug ("Found files AND heatFiles - combine and add!");
-            Map <String, Object> combinedFiles = new HashMap <String, Object> ();
+            Map <String, Object> combinedFiles = new HashMap<>();
             for (String keyString : files.keySet ()) {
                 combinedFiles.put (keyString, files.get (keyString));
             }
@@ -361,23 +358,23 @@ public class MsoHeatUtilsWithUpdate extends MsoHeatUtils {
 			sb.append("(outputs is empty)");
 			return sb;
 		}
-		Map<String, Object> outputs = new HashMap<String,Object>();
+		Map<String, Object> outputs = new HashMap<>();
 		for (Output outputItem : outputList) {
 			outputs.put(outputItem.getOutputKey(), outputItem.getOutputValue());
 		}
 		int counter = 0;
 		sb.append("OUTPUTS:\n");
 		for (String key : outputs.keySet()) {
-			sb.append("outputs[" + counter++ + "]: " + key + "=");
+			sb.append("outputs[").append(counter++).append("]: ").append(key).append("=");
 			Object obj = outputs.get(key);
 			if (obj instanceof String) {
-				sb.append((String)obj +" (a string)");
+				sb.append((String) obj).append(" (a string)");
 			} else if (obj instanceof JsonNode) {
-				sb.append(this.convertNode((JsonNode)obj) + " (a JsonNode)");
+				sb.append(this.convertNode((JsonNode) obj)).append(" (a JsonNode)");
 			} else if (obj instanceof java.util.LinkedHashMap) {
 				try {
 					String str = JSON_MAPPER.writeValueAsString(obj);
-					sb.append(str + " (a java.util.LinkedHashMap)");
+					sb.append(str).append(" (a java.util.LinkedHashMap)");
 				} catch (Exception e) {
 					LOGGER.debug("Exception :", e);
 					sb.append("(a LinkedHashMap value that would not convert nicely)");
@@ -431,8 +428,6 @@ public class MsoHeatUtilsWithUpdate extends MsoHeatUtils {
 			final Object obj = JSON_MAPPER.treeToValue(node, Object.class);
 			final String json = JSON_MAPPER.writeValueAsString(obj);
 			return json;
-		} catch (JsonParseException jpe) {
-			LOGGER.debug("Error converting json to string " + jpe.getMessage(), jpe);
 		} catch (Exception e) {
 			LOGGER.debug("Error converting json to string " + e.getMessage(), e);
 		}

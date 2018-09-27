@@ -1,6 +1,7 @@
 package org.openecomp.mso.bpmn.common.scripts
 
 import org.camunda.bpm.engine.delegate.BpmnError
+import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.runtime.Execution
 import org.json.JSONObject
 
@@ -46,7 +47,7 @@ class MultiVimAdapter extends AbstractServiceTaskProcessor {
      *
      * @param execution the execution
      */
-    public void preProcessRequest(Execution execution) {
+    public void preProcessRequest(DelegateExecution execution) {
 
         def method = getClass().getSimpleName() + '.preProcessRequest(' + 'execution=' + execution.getId() + ')'
         def isDebugLogEnabled = execution.getVariable('isDebugLogEnabled')
@@ -55,10 +56,11 @@ class MultiVimAdapter extends AbstractServiceTaskProcessor {
 
         try {
 
-            checkAllRequiredValues(execution, "vnfId", "vfModuleName", "vnfModelName", "mso-request-id", "mso-service-instance-id", "toscaCsarArtifactUuid", "cloudOwner", "cloudRegionId", "cloudType")
+            checkAllRequiredValues(execution, "vnfId", "vfModuleName", "vnfModelName", "mso-request-id", "mso-service-instance-id", "toscaCsarArtifactUuid", "cloudOwner", "cloudRegionId", "cloudType", "vfModuleModelName")
 
             def vnfId = execution.getVariable('vnfId')
             def vnfModelName = execution.getVariable('vnfModelName')
+            def vfModuleModelName = execution.getVariable('vfModuleModelName')
 
             String multiVimAUrl = execution.getVariable('URN_mso_multivim_adapters_vnf_rest_endpoint') + '/' + vnfId + '/vf-modules'
             execution.setVariable(PREFIX + 'multiVimAdapterUrl', multiVimAUrl)
@@ -100,6 +102,7 @@ class MultiVimAdapter extends AbstractServiceTaskProcessor {
                     """<createVfModuleMultiVimRequest>
                     <vnfId>${vnfId}</vnfId>
                     <vnfModelName>${vnfModelName}</vnfModelName>
+                    <vfModuleModelName>${vfModuleModelName}</vfModuleModelName>
                     <vfModuleName>${vfModuleName}</vfModuleName>
                     <multicloudName>${multicloudName}</multicloudName>
                     <cloudType>${cloudType}</cloudType>

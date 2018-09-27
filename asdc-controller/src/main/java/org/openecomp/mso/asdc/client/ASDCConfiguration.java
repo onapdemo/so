@@ -31,10 +31,11 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.openecomp.mso.asdc.client.exceptions.ASDCParametersException;
+import org.openecomp.mso.logger.MsoLogger;
 import org.openecomp.mso.properties.MsoJsonProperties;
 import org.openecomp.mso.properties.MsoPropertiesException;
 import org.openecomp.mso.properties.MsoPropertiesFactory;
-import org.openecomp.sdc.api.consumer.IConfiguration;
+import org.onap.sdc.api.consumer.IConfiguration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -50,21 +51,24 @@ public class ASDCConfiguration implements IConfiguration {
     private MsoJsonProperties msoProperties;
 
     private String asdcControllerName;
+	private  String PASSWORD_ATTRIBUTE_NAME;
+    private  String KEY_STORE_PASSWORD;
 
     public static final String MSO_PROP_ASDC = "MSO_PROP_ASDC";
     public static final String PARAMETER_PATTERN = "asdc-connections";
+    public static final String MSG_BUS_ADDRESS_ATTRIBUTE_NAME = "messageBusAddress";
+    public static final String COMPONENT_NAMES_ADDRESS_ATTRIBUTE_NAME = "componentNames";
+    public static final String WATCHDOG_TIMEOUT_NAME = "watchDogTimeout";
 
     public static final String CONSUMER_GROUP_ATTRIBUTE_NAME = "consumerGroup";
     public static final String CONSUMER_ID_ATTRIBUTE_NAME = "consumerId";
     public static final String ENVIRONMENT_NAME_ATTRIBUTE_NAME = "environmentName";
-    public static final String PASSWORD_ATTRIBUTE_NAME = "password";
     public static final String POLLING_INTERVAL_ATTRIBUTE_NAME = "pollingInterval";
     public static final String RELEVANT_ARTIFACT_TYPES_ATTRIBUTE_NAME = "relevantArtifactTypes";
     public static final String USER_ATTRIBUTE_NAME = "user";
     public static final String ASDC_ADDRESS_ATTRIBUTE_NAME = "asdcAddress";
     public static final String POLLING_TIMEOUT_ATTRIBUTE_NAME = "pollingTimeout";
     public static final String ACTIVATE_SERVER_TLS_AUTH = "activateServerTLSAuth";
-    public static final String KEY_STORE_PASSWORD = "keyStorePassword";
     public static final String KEY_STORE_PATH = "keyStorePath";
 
     public static final String HEAT="HEAT";
@@ -77,7 +81,8 @@ public class ASDCConfiguration implements IConfiguration {
     public static final String TOSCA_CSAR="TOSCA_CSAR";
     public static final String VF_MODULES_METADATA="VF_MODULES_METADATA";
 
-
+    private static MsoLogger msoLogger = MsoLogger.getMsoLogger (MsoLogger.Catalog.GENERAL);
+    
     private static final String[] SUPPORTED_ARTIFACT_TYPES = {HEAT,
     		HEAT_ARTIFACT,
     		HEAT_ENV,
@@ -113,14 +118,46 @@ public class ASDCConfiguration implements IConfiguration {
 
     }
     
+    @Override
     public java.lang.Boolean isUseHttpsWithDmaap() {
     	return false;
     }
+    
+    @Override
+    public boolean isConsumeProduceStatusTopic(){
+    	return true;
+    }
+    
+    @Override
+    public List<String> getMsgBusAddress(){
 
+       JsonNode masterConfigNode = getASDCControllerConfigJsonNode ();
+        if (masterConfigNode != null && masterConfigNode.get (MSG_BUS_ADDRESS_ATTRIBUTE_NAME) != null) {
+            List<String> msgAddressList = new ArrayList<>();
+            
+            Iterator<JsonNode> config = masterConfigNode.get(MSG_BUS_ADDRESS_ATTRIBUTE_NAME).elements();
+      
+            while( config.hasNext() ) {
+                String key = (String)config.next().asText();
+                msgAddressList.add(key);
+            }
+
+            if ("NULL".equals (msgAddressList) || msgAddressList.isEmpty ()) {
+                return null;
+            } else {
+                return msgAddressList;
+            }
+        } else {
+            return null;
+        } 
+    	
+    	
+    }
+    
     public String getAsdcControllerName () {
         return asdcControllerName;
     }
-
+    
     private JsonNode getASDCControllerConfigJsonNode () {
         if (this.msoProperties.getJsonRootNode ().get (PARAMETER_PATTERN) != null) {
             return this.msoProperties.getJsonRootNode ().get (PARAMETER_PATTERN).get (this.asdcControllerName);
@@ -184,6 +221,16 @@ public class ASDCConfiguration implements IConfiguration {
             return null;
         }
     }
+    
+    public int getWatchDogTimeout () {
+        JsonNode masterConfigNode = getASDCControllerConfigJsonNode ();
+        if (masterConfigNode != null && masterConfigNode.get (WATCHDOG_TIMEOUT_NAME) != null) {
+        	
+            return masterConfigNode.get (WATCHDOG_TIMEOUT_NAME).asInt ();
+        } else {
+            return 0;
+        }
+    }
 
     @Override
     public String getConsumerID () {
@@ -220,6 +267,10 @@ public class ASDCConfiguration implements IConfiguration {
 
     @Override
     public String getPassword () {
+	Properties keyProp = new Properties ();
+		try {
+			keyProp.load (Thread.currentThread ().getContextClassLoader ().getResourceAsStream ("config-key.properties"));
+     	   PASSWORD_ATTRIBUTE_NAME=(String) keyProp.get ("password.attribute.name");
         JsonNode masterConfigNode = getASDCControllerConfigJsonNode ();
         if (masterConfigNode != null && masterConfigNode.get (PASSWORD_ATTRIBUTE_NAME) != null) {
             String config = this.msoProperties.getEncryptedProperty (masterConfigNode.get (PASSWORD_ATTRIBUTE_NAME),
@@ -234,6 +285,10 @@ public class ASDCConfiguration implements IConfiguration {
         } else {
             return null;
         }
+		} catch (IOException e) {
+			msoLogger.debug("IOException occured", e);
+			 return null;
+		}
     }
 
     @Override
@@ -306,6 +361,10 @@ public class ASDCConfiguration implements IConfiguration {
 
 	@Override
 	public String getKeyStorePassword() {
+	Properties keyProp = new Properties ();
+		try {
+			keyProp.load (Thread.currentThread ().getContextClassLoader ().getResourceAsStream ("config-key.properties"));
+		    KEY_STORE_PASSWORD=(String) keyProp.get ("key.store.password");
 		JsonNode masterConfigNode = getASDCControllerConfigJsonNode();
 		if (masterConfigNode != null && masterConfigNode.get(KEY_STORE_PASSWORD) != null) {
 			String config = this.msoProperties.getEncryptedProperty(masterConfigNode.get(KEY_STORE_PASSWORD), null,
@@ -319,10 +378,15 @@ public class ASDCConfiguration implements IConfiguration {
 		} else {
 			return null;
 		}
+		} catch (IOException e) {
+			msoLogger.debug("IOException occured", e);
+			return null;
+		}
 	}
 
 	@Override
 	public String getKeyStorePath() {
+	
 		JsonNode masterConfigNode = getASDCControllerConfigJsonNode();
 		if (masterConfigNode != null && masterConfigNode.get(KEY_STORE_PATH) != null) {
 			String config = masterConfigNode.get(KEY_STORE_PATH).asText();
@@ -335,6 +399,7 @@ public class ASDCConfiguration implements IConfiguration {
 		} else {
 			return null;
 		}
+		
 	}
 
     public void testAllParameters () throws ASDCParametersException {
@@ -376,6 +441,11 @@ public class ASDCConfiguration implements IConfiguration {
             throw new ASDCParametersException (POLLING_TIMEOUT_ATTRIBUTE_NAME
                                                + " parameter cannot be found in config mso.properties");
         }
+        
+        if (this.getWatchDogTimeout() == 0) {
+            throw new ASDCParametersException (WATCHDOG_TIMEOUT_NAME
+                                               + " parameter cannot be found in config mso.properties");
+        }
 
         if (this.getRelevantArtifactTypes () == null || this.getRelevantArtifactTypes ().isEmpty ()) {
             throw new ASDCParametersException (RELEVANT_ARTIFACT_TYPES_ATTRIBUTE_NAME
@@ -386,6 +456,12 @@ public class ASDCConfiguration implements IConfiguration {
             throw new ASDCParametersException (USER_ATTRIBUTE_NAME
                                                + " parameter cannot be found in config mso.properties");
         }
+                
+        if (this.getMsgBusAddress() == null || this.getMsgBusAddress().isEmpty ()) {
+            throw new ASDCParametersException (MSG_BUS_ADDRESS_ATTRIBUTE_NAME
+                                               + " parameter cannot be found in config mso.properties");
+        }
+        
     }
 
     /**
@@ -399,7 +475,7 @@ public class ASDCConfiguration implements IConfiguration {
 
         MsoJsonProperties msoProp;
         try {
-            List <String> result = new ArrayList <String> ();
+            List <String> result = new ArrayList<>();
             msoProp = new MsoPropertiesFactory ().getMsoJsonProperties (MSO_PROP_ASDC);
 
             if (msoProp.getJsonRootNode ().get (PARAMETER_PATTERN) != null) {

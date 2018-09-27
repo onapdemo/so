@@ -4,9 +4,9 @@ import org.codehaus.jackson.map.annotate.JsonRootName;
 import org.jboss.resteasy.annotations.providers.NoJackson;
 import org.openecomp.mso.adapters.vnfrest.VfResponseCommon;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.Map;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @JsonRootName("CreateVfModuleMultiVimResponse")
 @XmlRootElement(name = "CreateVfModuleMultiVimResponse")

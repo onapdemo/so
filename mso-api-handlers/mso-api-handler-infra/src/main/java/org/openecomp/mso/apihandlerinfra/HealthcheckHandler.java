@@ -38,8 +38,6 @@ import com.wordnik.swagger.annotations.ApiOperation;
 @Api(value="/healthcheck",description="API Handler Infra Health Check")
 public class HealthcheckHandler {
 
-    public final static String MSO_PROP_APIHANDLER_INFRA = "MSO_PROP_APIHANDLER_INFRA";
-
     private static MsoLogger msoLogger = MsoLogger.getMsoLogger (MsoLogger.Catalog.APIH);
 
     @HEAD
@@ -51,11 +49,11 @@ public class HealthcheckHandler {
         MsoLogger.setServiceName ("Healthcheck");
         UUIDChecker.verifyOldUUID(requestId, msoLogger);
         HealthCheckUtils healthCheck = new HealthCheckUtils ();
-        if (!healthCheck.siteStatusCheck(msoLogger, startTime)) {
+        if (!healthCheck.siteStatusCheck(msoLogger)) {
             return HealthCheckUtils.HEALTH_CHECK_NOK_RESPONSE;
         }
 
-        if (!healthCheck.configFileCheck(msoLogger, startTime, MSO_PROP_APIHANDLER_INFRA)) {
+        if (!healthCheck.configFileCheck(msoLogger, startTime, Constants.MSO_PROP_APIHANDLER_INFRA)) {
             return HealthCheckUtils.NOT_STARTED_RESPONSE;
         }
 

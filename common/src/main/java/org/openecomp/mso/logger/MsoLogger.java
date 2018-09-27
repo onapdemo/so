@@ -98,11 +98,11 @@ public class MsoLogger {
 
     public enum Catalog {
         APIH, BPEL, RA, ASDC, GENERAL
-    };
+    }
 
     public enum StatusCode {
         COMPLETE, ERROR
-    };
+    }
 
     public enum ResponseCode {
         Suc(0), PermissionError(100), DataError(300), DataNotFound(301), BadRequest(302), SchemaError(
@@ -115,10 +115,10 @@ public class MsoLogger {
             return this.value;
         }
 
-        private ResponseCode(int value) {
+        ResponseCode(int value) {
             this.value = value;
         }
-    };
+    }
 
     public enum ErrorCode {
         PermissionError(100), AvailabilityError(200), DataError(300), SchemaError(400), BusinessProcesssError(
@@ -130,10 +130,10 @@ public class MsoLogger {
             return this.value;
         }
 
-        private ErrorCode(int value) {
+        ErrorCode(int value) {
             this.value = value;
         }
-    };
+    }
 
     private EELFLogger          logger, auditLogger, metricsLogger;
     private static final String CONFIG_FILE = System.getProperty("jboss.home.dir") + "/mso-config/uuid/uuid_"
@@ -144,15 +144,16 @@ public class MsoLogger {
     // For internal logging of the initialization of MSO logs
     private static final Logger LOGGER      = Logger.getLogger(MsoLogger.class.getName());
 
-    private MsoLogger(MsoLogger.Catalog cat) {
-        this.logger = EELFManager.getInstance().getErrorLogger();
-        this.auditLogger = EELFManager.getInstance().getAuditLogger();
-        this.metricsLogger = EELFManager.getInstance().getMetricsLogger();
-        MsoLogger.initialization();
-        setDefaultLogCatalog(cat);
-    }
 
-    private static synchronized void initialization() {
+    // Since four adaptors are using the instance of  MsoLogger which will be referenced everywhere
+    // hence limiting the number of MsoLogger instances to five.
+    private static final MsoLogger generalMsoLogger = new MsoLogger(Catalog.GENERAL);
+    private static final MsoLogger apihLogger = new MsoLogger(Catalog.APIH);
+    private static final MsoLogger asdcLogger = new MsoLogger(Catalog.ASDC);
+    private static final MsoLogger raLogger = new MsoLogger(Catalog.RA);
+    private static final MsoLogger bpelLogger = new MsoLogger(Catalog.BPEL);
+
+    static {
         if (instanceUUID == null || ("").equals(instanceUUID)) {
             instanceUUID = getInstanceUUID();
         }
@@ -170,15 +171,40 @@ public class MsoLogger {
         }
     }
 
+    // Singleton instances of the EELFLogger of all types are referenced by MsoLogger
+    private MsoLogger(Catalog cat) {
+        this.logger = EELFManager.getInstance().getErrorLogger();
+        this.auditLogger = EELFManager.getInstance().getAuditLogger();
+        this.metricsLogger = EELFManager.getInstance().getMetricsLogger();
+        this.setDefaultLogCatalog(cat);
+    }
+
+
+
     /**
      * Get the MsoLogger based on the catalog
-     * 
+     * This method is fixed now to resolve the total number of objects that are getting created
+     * everytime this function gets called. Its supposed to have fixed number of instance per java process.
+     *
      * @param cat
      *            Catalog of the logger
      * @return the MsoLogger
      */
     public static synchronized MsoLogger getMsoLogger(MsoLogger.Catalog cat) {
-        return new MsoLogger(cat);
+        switch (cat) {
+            case GENERAL:
+                return generalMsoLogger;
+            case APIH:
+                return apihLogger;
+            case RA:
+                return raLogger;
+            case BPEL:
+                return bpelLogger;
+            case ASDC:
+                return asdcLogger;
+            default:
+                return generalMsoLogger;
+        }
     }
 
     /**
@@ -251,6 +277,16 @@ public class MsoLogger {
     public void debug(String msg, Throwable t) {
         prepareMsg(DEBUG_LEVEL);
         logger.debug(msg, t);
+    }
+
+    /**
+     * Log error message with the details of the exception that caused the error.
+     * @param msg
+     * @param throwable
+     */
+    public void error(String msg, Throwable throwable) {
+        prepareMsg(ERROR_LEVEL);
+        logger.error(msg, throwable);
     }
 
     // Info methods
@@ -953,8 +989,7 @@ public class MsoLogger {
         File configFile = new File(CONFIG_FILE);
         String uuid = "";
         BufferedReader in = null;
-        BufferedWriter bw = null;
-        try {
+        try{
             // Verify whether instanceUUID file exist,
             // If yes, read the content; if not, generate the instanceUUID and
             // write to the file
@@ -964,10 +999,11 @@ public class MsoLogger {
                 if ((uuid = in.readLine()) == null) {
                     // the file is empty, regenerate the file
                     uuid = UUID.randomUUID().toString();
-                    FileWriter fw = new FileWriter(configFile.getAbsoluteFile());
-                    bw = new BufferedWriter(fw);
+                    try(BufferedWriter bw = new BufferedWriter(new FileWriter(configFile.getAbsoluteFile()))) {
                     bw.write(uuid);
-                    bw.close();
+                    } catch (IOException e) {
+                      LOGGER.log(Level.SEVERE, "Error trying to write UUID file", e);
+					}
                 }
                 in.close();
             } else {
@@ -976,20 +1012,18 @@ public class MsoLogger {
                 uuid = UUID.randomUUID().toString();
                 configFile.getParentFile().mkdirs();
                 configFile.createNewFile();
-                FileWriter fw = new FileWriter(configFile.getAbsoluteFile());
-                bw = new BufferedWriter(fw);
-                bw.write(uuid);
-                bw.close();
+                try(BufferedWriter bw1 = new BufferedWriter(new FileWriter(configFile.getAbsoluteFile()))){
+                bw1.write(uuid);
+                } catch (IOException e) {
+                  LOGGER.log(Level.SEVERE, "Error trying to write UUID file", e);
+				}
             }
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Error trying to read UUID file", e);
+          LOGGER.log(Level.SEVERE, "Error trying to read UUID file", e);
         } finally {
             try {
                 if (in != null) {
                     in.close();
-                }
-                if (bw != null) {
-                    bw.close();
                 }
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, "Error trying to close UUID file", ex);

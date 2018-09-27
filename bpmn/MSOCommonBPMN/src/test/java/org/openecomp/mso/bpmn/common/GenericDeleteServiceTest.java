@@ -51,10 +51,10 @@ public class GenericDeleteServiceTest extends WorkflowTest {
 	@Deployment(resources = {"subprocess/GenericDeleteService.bpmn"})
 	public void testGenericDeleteService_success_serviceInstance() throws Exception{
 		MockDeleteServiceInstance("1604-MVM-26", "SDN-ETHERNET-INTERNET", "MIS%252F1604%252F0026%252FSW_INTERNET", "1234");
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", "1604-MVM-26", "SDN-ETHERNET-INTERNET", "1234");
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericDeleteService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_SuccessIndicator");
 		String foundIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_FoundIndicator");
 		String resourceVersionProvidedFlag = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_resourceVersionProvidedFlag");
@@ -70,11 +70,11 @@ public class GenericDeleteServiceTest extends WorkflowTest {
 
 		MockDeleteServiceInstance("1604-MVM-26", "SDN-ETHERNET-INTERNET", "1234", 204);
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesSubscription(variables, "", "1604-MVM-26", "SDN-ETHERNET-INTERNET", "1234");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericDeleteService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_SuccessIndicator");
 		String foundIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_FoundIndicator");
@@ -94,11 +94,11 @@ public class GenericDeleteServiceTest extends WorkflowTest {
 		MockGetServiceInstance("1604-MVM-26", "SDN-ETHERNET-INTERNET", "MIS%252F1604%252F0026%252FSW_INTERNET", "GenericFlows/getServiceSubscription.xml");
 		MockDeleteServiceInstance("1604-MVM-26", "SDN-ETHERNET-INTERNET", "MIS%252F1604%252F0026%252FSW_INTERNET", "1234");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", "1604-MVM-26", "SDN-ETHERNET-INTERNET", null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericDeleteService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_SuccessIndicator");
 		String foundIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_FoundIndicator");
@@ -118,11 +118,11 @@ public class GenericDeleteServiceTest extends WorkflowTest {
 		MockGetServiceSubscription("1604-MVM-26", "SDN-ETHERNET-INTERNET", "GenericFlows/getServiceSubscription.xml");
 		MockDeleteServiceInstance("1604-MVM-26", "SDN-ETHERNET-INTERNET", "1234", 204);
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesSubscription(variables, null, "1604-MVM-26", "SDN-ETHERNET-INTERNET", null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericDeleteService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_SuccessIndicator");
 		String foundIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_FoundIndicator");
@@ -142,11 +142,11 @@ public class GenericDeleteServiceTest extends WorkflowTest {
 
 		MockGetServiceInstance_404("1604-MVM-26", "SDN-ETHERNET-INTERNET", "MIS%252F1604%252F0026%252FSW_INTERNET");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", "1604-MVM-26", "SDN-ETHERNET-INTERNET", null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericDeleteService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_SuccessIndicator");
 		String foundIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_FoundIndicator");
@@ -164,11 +164,11 @@ public class GenericDeleteServiceTest extends WorkflowTest {
 	public void testGenericDeleteService_success_subscriptionGetEmpty200() throws Exception{
 		MockGetServiceInstance("1604-MVM-26", "SDN-ETHERNET-INTERNET", "1234", 200);
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesSubscription(variables, "", "1604-MVM-26", "SDN-ETHERNET-INTERNET", "");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericDeleteService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_SuccessIndicator");
 		String foundIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_FoundIndicator");
@@ -189,11 +189,11 @@ public class GenericDeleteServiceTest extends WorkflowTest {
 		MockGetServiceInstance("1604-MVM-26", "SDN-ETHERNET-INTERNET", "MIS%252F1604%252F0026%252FSW_INTERNET", "GENDSI_getServiceInstanceResponse.xml");
 		MockDeleteServiceInstance_404("1604-MVM-26", "SDN-ETHERNET-INTERNET", "MIS%252F1604%252F0026%252FSW_INTERNET", "1234");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", "1604-MVM-26", "SDN-ETHERNET-INTERNET", "1234");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericDeleteService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_SuccessIndicator");
 		String foundIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_FoundIndicator");
@@ -210,11 +210,11 @@ public class GenericDeleteServiceTest extends WorkflowTest {
 	@Deployment(resources = {"subprocess/GenericDeleteService.bpmn"})
 	public void testGenericDeleteService_error_invalidVariables() throws Exception{
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", null, "SDN-ETHERNET-INTERNET", "1234");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericDeleteService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_SuccessIndicator");
 		String foundIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_FoundIndicator");
@@ -236,11 +236,11 @@ public class GenericDeleteServiceTest extends WorkflowTest {
 
 		MockGetServiceInstance_500("1604-MVM-26", "SDN-ETHERNET-INTERNET", "MIS%252F1604%252F0026%252FSW_INTERNET", "aaiFault.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", "1604-MVM-26", "SDN-ETHERNET-INTERNET", null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericDeleteService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_SuccessIndicator");
 		String foundIndicator = BPMNUtil.getVariable(processEngineRule, "GenericDeleteService", "GENDS_FoundIndicator");

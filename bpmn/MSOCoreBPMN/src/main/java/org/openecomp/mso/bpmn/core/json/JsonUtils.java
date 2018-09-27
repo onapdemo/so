@@ -21,27 +21,42 @@
 
 package org.openecomp.mso.bpmn.core.json;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.StringTokenizer;
 
+import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.runtime.Execution;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
-
+import org.openecomp.mso.apihandler.common.ValidationException;
 //import org.openecomp.mso.bpmn.core.BPMNLogger;
 import org.openecomp.mso.bpmn.core.xml.XmlTool;
 import org.openecomp.mso.logger.MsoLogger;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.github.fge.jsonschema.main.JsonValidator;
 
 /**
  * Utility class for JSON processing
  * 
  * @version 1.0
+ * 
+ * Note: It was observed, that depending on the JSON implementation, an org.json.JSONException or a
+ *       java.util.NoSuchElementException will be thrown in the event of the key value being "not found"
+ *       in a JSON document. A general check has been added to the applicable catch blocks for this
+ *       this type of behavior to reduce the amount of logging. As a key value not being found is
+ *       expect behavior, it makes no sense to log the stack trace associated with this type of failure.
  */
 
 public class JsonUtils {
@@ -117,12 +132,12 @@ public class JsonUtils {
 	 * to convert a JSONObject to an XML Doc. The intent of this is to
 	 * correctly generate XML from JSON including TAGs for JSONArrays
 	 *
-	 * @param  jsonObj	org.json.JSON object to be converted to XML
+	 * @param  obj	org.json.JSON object to be converted to XML
 	 * @param  tagName 	optional XML tagname supplied primarily during recursive calls
 	 * @return String containing the XML translation
 	 */
 	public static String toXMLString(Object obj, String tagName) throws JSONException {
-		StringBuffer strBuf = new StringBuffer();
+		StringBuilder strBuf = new StringBuilder();
 		int i;
 		JSONArray jsonArr;
 		JSONObject jsonObj;
@@ -327,7 +342,7 @@ public class JsonUtils {
 					return null;
 				} else {
 					if (rawValue instanceof String) {
-						msoLogger.debug("getJsonValue(): the raw value is a String Object=" + ((String) rawValue));
+						msoLogger.debug("getJsonValue(): the raw value is a String Object=" + rawValue);
 						return (String) rawValue;
 					} else {
 						msoLogger.debug("getJsonValue(): the raw value is NOT a String Object=" + rawValue.toString());
@@ -356,7 +371,7 @@ public class JsonUtils {
 					return null;
 				} else {
 					if (rawValue instanceof String) {
-						msoLogger.debug("getJsonNodeValue(): the raw value is a String Object=" + ((String) rawValue));
+						msoLogger.debug("getJsonNodeValue(): the raw value is a String Object=" + rawValue);
 						return (String) rawValue;
 					} else {
 						msoLogger.debug("getJsonNodeValue(): the raw value is NOT a String Object=" + rawValue.toString());
@@ -388,15 +403,15 @@ public class JsonUtils {
 					return 0;
 				} else {
 					if (rawValue instanceof Integer) {
-						msoLogger.debug("getJsonValue(): the raw value is an Integer Object=" + ((String) rawValue).toString());
+						msoLogger.debug("getJsonValue(): the raw value is an Integer Object=" + rawValue);
 						return (Integer) rawValue;
 					} else {
-						msoLogger.debug("getJsonValue(): the raw value is NOT an Integer Object=" + rawValue.toString());
+						msoLogger.debug("getJsonIntValue(): the raw value is NOT an Integer Object=" + rawValue.toString());
 						return 0;
 					}
 				}
 		} catch (Exception e) {
-				msoLogger.debug("getJsonValue(): unable to parse json to retrieve value for field=" + keys + ". Exception was: " + e.toString(), e);
+				msoLogger.debug("getJsonIntValue(): unable to parse json to retrieve value for field=" + keys + ". Exception was: " + e.toString(), e);
 		}
 		return 0;
 	}
@@ -416,15 +431,15 @@ public class JsonUtils {
 					return false;
 				} else {
 					if (rawValue instanceof Boolean) {
-						msoLogger.debug("getJsonValue(): the raw value is a Boolean Object=" + ((String) rawValue));
+						msoLogger.debug("getJsonBooleanValue(): the raw value is a Boolean Object=" + rawValue);
 						return (Boolean) rawValue;
 					} else {
-						msoLogger.debug("getJsonValue(): the raw value is NOT an Boolean Object=" + rawValue.toString());
+						msoLogger.debug("getJsonBooleanValue(): the raw value is NOT an Boolean Object=" + rawValue.toString());
 						return false;
 					}
 				}
 		} catch (Exception e) {
-				msoLogger.debug("getJsonValue(): unable to parse json to retrieve value for field=" + keys + ". Exception was: " + e.toString(),e);
+				msoLogger.debug("getJsonBooleanValue(): unable to parse json to retrieve value for field=" + keys + ". Exception was: " + e.toString(),e);
 		}
 		return false;
 	}
@@ -462,7 +477,7 @@ public class JsonUtils {
 				return null;
 			} else {
 				if (rawValue instanceof JSONArray) {
-					msoLogger.debug("getJsonParamValue(): keys=" + keys + " points to JSONArray: " + ((JSONArray) rawValue).toString());
+					msoLogger.debug("getJsonParamValue(): keys=" + keys + " points to JSONArray: " + rawValue.toString());
 					int arrayLen = ((JSONArray) rawValue).length();
 					if (index < 0 || arrayLen < index+1) {
 						msoLogger.debug("getJsonParamValue(): index: " + index + " is out of bounds for array size of " + arrayLen);
@@ -472,7 +487,7 @@ public class JsonUtils {
 					for (int i = 0; i < arrayLen; i++) {
 						msoLogger.debug("getJsonParamValue(): index: " + i + ", value: " + ((JSONArray) rawValue).get(i).toString());
 						if (((JSONArray) rawValue).get(i) instanceof JSONObject) {
-							msoLogger.debug("getJsonParamValue(): index: " + i + " is a JSONObject");
+//							msoLogger.debug("getJsonParamValue(): index: " + i + " is a JSONObject");
 							JSONObject jsonObj = (JSONObject)((JSONArray) rawValue).get(i);
 							String parmValue = jsonObj.get(name).toString();
 							if (parmValue != null) {
@@ -498,11 +513,13 @@ public class JsonUtils {
 					return null;
 				}
 			}
-		} catch (JSONException je) {
-				// JSONObject::get() throws this exception if one of the specified keys is not found
-				msoLogger.debug("getJsonParamValue(): caught JSONException attempting to retrieve param value for keys:" + keys + ", name=" + name, je);
 		} catch (Exception e) {
+			// JSONObject::get() throws a "not found" exception if one of the specified keys is not found
+			if (e.getMessage().contains("not found")) {
+				msoLogger.debug("getJsonParamValue(): failed to retrieve param value for keys:" + keys + ", name=" + name + ": " + e.getMessage());				
+			} else {
 				msoLogger.debug("getJsonParamValue(): unable to parse json to retrieve value for field=" + keys + ". Exception was: " + e.toString(), e);
+			}
 		}
 		return null;
 	}
@@ -539,23 +556,25 @@ public class JsonUtils {
 		String keyValue = null;
 		try {
 			if (jsonObj.has(key)) {
-				msoLogger.debug("getJsonValueForKey(): found value for key=" + key);
 				Object value = jsonObj.get(key);
-				if (value == null)
+				msoLogger.debug("getJsonValueForKey(): found value=" + (String) value + ", for key=" + key);
+				if (value == null) {
 					return null;
-				else
+				} else {
 					return ((String) value);
+				}
 			} else {
-				msoLogger.debug("getJsonValueForKey(): iterating over the keys");
+//				msoLogger.debug("getJsonValueForKey(): iterating over the keys");
 				Iterator <String> itr = jsonObj.keys();
 				while (itr.hasNext()) {
-					String nextKey = (String) itr.next();
+					String nextKey = itr.next();
 					Object obj = jsonObj.get(nextKey);
 					if (obj instanceof JSONObject) {
-						msoLogger.debug("getJsonValueForKey(): key=" + nextKey + ", points to JSONObject, recursive call");
+//						msoLogger.debug("getJsonValueForKey(): key=" + nextKey + ", points to JSONObject, recursive call on: " +
+//								((JSONObject) obj).toString(MSOJsonIndentFactor));
 						keyValue = getJsonValueForKey((JSONObject) obj, key);
 						if (keyValue != null) {
-							msoLogger.debug("getJsonValueForKey(): found value=" + keyValue + ", for key=" + key);
+//							msoLogger.debug("getJsonValueForKey(): found value=" + keyValue + ", for key=" + key);
 							break;
 						}
 					} else {
@@ -563,12 +582,14 @@ public class JsonUtils {
 					}
 				}
 			}
-		} catch (JSONException je) {
-				// JSONObject::get() throws this exception if one of the specified keys is not found
-				msoLogger.debug("getJsonValueForKey(): caught JSONException attempting to retrieve value for key=" + key, je);
-				keyValue = null;
 		} catch (Exception e) {
+			// JSONObject::get() throws a "not found" exception if one of the specified keys is not found
+			if (e.getMessage().contains("not found")) {
+				msoLogger.debug("getJsonValueForKey(): failed to retrieve param value for key=" + key + ": " + e.getMessage());				
+			} else {
 				msoLogger.debug("getJsonValueForKey(): unable to parse json to retrieve value for field=" + key + ". Exception was: " + e.toString(), e);
+			}
+			keyValue = null;
 		}
 		return keyValue;
 	}
@@ -583,35 +604,38 @@ public class JsonUtils {
 	 */
 	public static Integer getJsonIntValueForKey(JSONObject jsonObj, String key) {
 //		String isDebugLogEnabled = "true";
-		Integer keyValue = 0;
+		Integer keyValue = null;
 		try {
 			if (jsonObj.has(key)) {
-				msoLogger.debug("getJsonValueForKey(): found value for key=" + key);
-				return (Integer) jsonObj.get(key);
+				Integer value = (Integer) jsonObj.get(key);
+				msoLogger.debug("getJsonIntValueForKey(): found value=" + value + ", for key=" + key);
+				return value;
 			} else {
-				msoLogger.debug("getJsonValueForKey(): iterating over the keys");
+//				msoLogger.debug("getJsonIntValueForKey(): iterating over the keys");
 				Iterator <String> itr = jsonObj.keys();
 				while (itr.hasNext()) {
-					String nextKey = (String) itr.next();
+					String nextKey = itr.next();
 					Object obj = jsonObj.get(nextKey);
 					if (obj instanceof JSONObject) {
-						msoLogger.debug("getJsonValueForKey(): key=" + nextKey + ", points to JSONObject, recursive call");
+//						msoLogger.debug("getJsonIntValueForKey(): key=" + nextKey + ", points to JSONObject, recursive call");
 						keyValue = getJsonIntValueForKey((JSONObject) obj, key);
 						if (keyValue != null) {
-							msoLogger.debug("getJsonValueForKey(): found value=" + keyValue + ", for key=" + key);
+//							msoLogger.debug("getJsonIntValueForKey(): found value=" + keyValue + ", for key=" + key);
 							break;
 						}
 					} else {
-						msoLogger.debug("getJsonValueForKey(): key=" + nextKey + ", does not point to a JSONObject, next key");
+						msoLogger.debug("getJsonIntValueForKey(): key=" + nextKey + ", does not point to a JSONObject, next key");
 					}
 				}
 			}
-		} catch (JSONException je) {
-				// JSONObject::get() throws this exception if one of the specified keys is not found
-				msoLogger.debug("getJsonValueForKey(): caught JSONException attempting to retrieve value for key=" + key, je);
-				keyValue = null;
 		} catch (Exception e) {
-				msoLogger.debug("getJsonValueForKey(): unable to parse json to retrieve value for field=" + key + ". Exception was: " + e.toString(),e);
+			// JSONObject::get() throws a "not found" exception if one of the specified keys is not found
+			if (e.getMessage().contains("not found")) {
+				msoLogger.debug("getJsonIntValueForKey(): failed to retrieve param value for key=" + key + ": " + e.getMessage());				
+			} else {
+				msoLogger.debug("getJsonIntValueForKey(): unable to parse json to retrieve value for field=" + key + ". Exception was: " + e.toString(),e);
+			}
+			keyValue = null;
 		}
 		return keyValue;
 	}
@@ -625,22 +649,23 @@ public class JsonUtils {
 	 * @return String field value associated with key
 	 */
 	public static Boolean getJsonBooleanValueForKey(JSONObject jsonObj, String key) {
-		Boolean keyValue = false;
+		Boolean keyValue = null;
 		try {
 			if (jsonObj.has(key)) {
-				msoLogger.debug("getJsonBooleanValueForKey(): found value for key=" + key);
-				return (Boolean) jsonObj.get(key);
+				Boolean value = (Boolean) jsonObj.get(key);
+				msoLogger.debug("getJsonBooleanValueForKey(): found value=" + value + ", for key=" + key);				
+				return value;
 			} else {
-				msoLogger.debug("getJsonBooleanValueForKey(): iterating over the keys");
+//				msoLogger.debug("getJsonBooleanValueForKey(): iterating over the keys");
 				Iterator <String> itr = jsonObj.keys();
 				while (itr.hasNext()) {
-					String nextKey = (String) itr.next();
+					String nextKey = itr.next();
 					Object obj = jsonObj.get(nextKey);
 					if (obj instanceof JSONObject) {
-						msoLogger.debug("getJsonBooleanValueForKey(): key=" + nextKey + ", points to JSONObject, recursive call");
+//						msoLogger.debug("getJsonBooleanValueForKey(): key=" + nextKey + ", points to JSONObject, recursive call");
 						keyValue = getJsonBooleanValueForKey((JSONObject) obj, key);
 						if (keyValue != null) {
-							msoLogger.debug("getJsonBooleanValueForKey(): found value=" + keyValue + ", for key=" + key);
+//							msoLogger.debug("getJsonBooleanValueForKey(): found value=" + keyValue + ", for key=" + key);
 							break;
 						}
 					} else {
@@ -648,12 +673,14 @@ public class JsonUtils {
 					}
 				}
 			}
-		} catch (JSONException je) {
-				// JSONObject::get() throws this exception if one of the specified keys is not found
-				msoLogger.debug("getJsonBooleanValueForKey(): caught JSONException attempting to retrieve value for key=" + key,je);
-				keyValue = null;
 		} catch (Exception e) {
+			// JSONObject::get() throws a "not found" exception if one of the specified keys is not found
+			if (e.getMessage().contains("not found")) {
+				msoLogger.debug("getJsonBooleanValueForKey(): failed to retrieve param value for key=" + key + ": " + e.getMessage());				
+			} else {
 				msoLogger.debug("getJsonBooleanValueForKey(): unable to parse json to retrieve value for field=" + key + ". Exception was: " + e.toString(),e);
+			}
+			keyValue = null;
 		}
 		return keyValue;
 	}
@@ -690,7 +717,7 @@ public class JsonUtils {
 		if (!jsonValueExists(jsonStr, keys)) {
 			return putJsonValue(jsonStr, keys, value);
 		} else {
-			msoLogger.debug("addJsonValue(): JSON add failed, key=" + keys + "/value=" + (String) value + " already exists");
+			msoLogger.debug("addJsonValue(): JSON add failed, key=" + keys + "/value=" + value + " already exists");
 			return jsonStr;
 		}
 	}
@@ -773,7 +800,7 @@ public class JsonUtils {
 				keyStr = keyTokens.nextToken();
 				Object keyValue = jsonObj.get(keyStr);
 				if (keyValue instanceof JSONObject) {
-					msoLogger.debug("getJsonRawValue(): key=" + keyStr + " points to json object");
+//					msoLogger.debug("getJsonRawValue(): key=" + keyStr + " points to json object");
 					jsonObj = (JSONObject) keyValue;
 				} else {
 					if (keyTokens.hasMoreElements()) {
@@ -795,11 +822,13 @@ public class JsonUtils {
 				return jsonObj.toString();
 			}
 
-		} catch (JSONException je) {
-				// JSONObject::get() throws this exception if one of the specified keys is not found
-				msoLogger.debug("getJsonRawValue(): caught JSONException attempting to retrieve raw value for key=" + keyStr,je);
 		} catch (Exception e) {
+			// JSONObject::get() throws a "not found" exception if one of the specified keys is not found
+			if (e.getMessage().contains("not found")) {
+				msoLogger.debug("getJsonRawValue(): failed to retrieve param value for key=" + keyStr + ": " + e.getMessage());				
+			} else {
 				msoLogger.debug("getJsonRawValue(): unable to parse json to retrieve value for field=" + keys + ". Exception was: " + e.toString(),e);
+			}
 		}
 		return null;
 	}
@@ -823,10 +852,10 @@ public class JsonUtils {
 				if (keyTokens.hasMoreElements()) {
 					Object keyValue = jsonObj.get(keyStr);
 					if (keyValue instanceof JSONObject) {
-						msoLogger.debug("putJsonValue(): key=" + keyStr + " points to json object");
+//						msoLogger.debug("putJsonValue(): key=" + keyStr + " points to json object");
 						jsonObj = (JSONObject) keyValue;
 					} else {
-						msoLogger.debug("putJsonValue(): key=" + keyStr + " not the last key but points to non-json object: " + (String) keyValue);
+						msoLogger.debug("putJsonValue(): key=" + keyStr + " not the last key but points to non-json object: " + keyValue);
 						return null;
 					}
 				} else { // at the last/new key value
@@ -837,12 +866,13 @@ public class JsonUtils {
 			// should not hit this point if the key points to a valid key value
 			return null;
 
-		} catch (JSONException je) {
-				// JSONObject::get() throws this exception if one of the specified keys is not found
-				msoLogger.debug("putJsonValue(): caught JSONException attempting to retrieve value for key=" + keyStr,je);
-				return null;
 		} catch (Exception e) {
+			// JSONObject::get() throws a "not found" exception if one of the specified keys is not found
+			if (e.getMessage().contains("not found")) {
+				msoLogger.debug("putJsonValue(): failed to put param value for key=" + keyStr + ": " + e.getMessage());				
+			} else {
 				msoLogger.debug("putJsonValue(): unable to parse json to put value for key=" + keys + ". Exception was: " + e.toString(),e);
+			}
 		}
 		return null;
 	}
@@ -856,23 +886,25 @@ public class JsonUtils {
 	 *
 	 * @return Map - a Map containing the entries
 	 */
-	public Map<String, String> entryArrayToMap(Execution execution, String entryArray) {
-		msoLogger.debug("Started Entry Array To Map Util Method");
+	public Map<String, String> jsonStringToMap(DelegateExecution execution, String entry) {
+		msoLogger.debug("Started Json String To Map Method");
 
 		Map<String, String> map = new HashMap<>();
 
 		//Populate Map
-		String entryListJson = "{ \"entry\":" + entryArray + "}";
-		JSONObject obj = new JSONObject(entryListJson);
-		JSONArray arr = obj.getJSONArray("entry");
-		for (int i = 0; i < arr.length(); i++){
-			JSONObject jo = arr.getJSONObject(i);
-			String key = jo.getString("key");
-			String value =jo.getString("value");
-			map.put(key, value);
+		JSONObject obj = new JSONObject(entry);
+		
+		/* Wildfly is pushing a version of org.json which does not
+		 * auto cast to string. Leaving it as an object prevents
+		 * a method not found exception at runtime.
+		 */
+		final Iterator<String> keys = obj.keys();
+		while (keys.hasNext()) {
+			final String key = keys.next();
+			map.put(key, obj.getString(key));
 		}
 		msoLogger.debug("Outgoing Map is: " + map);
-		msoLogger.debug("Completed Entry Array To Map Util Method");
+		msoLogger.debug("Completed Json String To Map Method");
 		return map;
 	}
 
@@ -888,18 +920,18 @@ public class JsonUtils {
 	 * @return Map - a Map containing the entries
 	 *
 	 */
-	public Map<String, String> entryArrayToMap(Execution execution, String entryArray, String keyNode, String valueNode) {
+	public Map<String, String> entryArrayToMap(DelegateExecution execution, String entryArray, String keyNode, String valueNode) {
 		msoLogger.debug("Started Entry Array To Map Util Method");
 
 		Map<String, String> map = new HashMap<>();
 		//Populate Map
-		String entryListJson = "{ \"entry\":" + entryArray + "}";
+		String entryListJson = "{ \"wrapper\":" + entryArray + "}";
 		JSONObject obj = new JSONObject(entryListJson);
-		JSONArray arr = obj.getJSONArray("entry");
+		JSONArray arr = obj.getJSONArray("wrapper");
 		for (int i = 0; i < arr.length(); i++){
 			JSONObject jo = arr.getJSONObject(i);
 			String key = jo.getString(keyNode);
-			String value =jo.getString(valueNode);
+			String value = jo.getString(valueNode);
 			map.put(key, value);
 		}
 		msoLogger.debug("Outgoing Map is: " + map);
@@ -913,7 +945,7 @@ public class JsonUtils {
 	 * and puts it in a Java List<String>.
 	 *
 	 * @param execution
-	 * @param stringArray - the getJsonValue of a json array of strings
+	 * @param jsonArrayOfStrings - the getJsonValue of a json array of strings
 	 *
 	 * @return List - a java list containing the strings
 	 *
@@ -928,14 +960,14 @@ public class JsonUtils {
 		JSONObject obj = new JSONObject(stringListJson);
 		JSONArray arr = obj.getJSONArray("strings");
 		for (int i = 0; i < arr.length(); i++){
-		    String s = arr.get(i).toString();
+			String s = arr.get(i).toString();
 			list.add(s);
 		}
 		msoLogger.debug("Outgoing List is: " + list);
 		msoLogger.debug("Completed String Array To List Util Method");
 		return list;
 	}
-	
+
 	/**
 	 *
 	 * Invokes the getJsonRawValue() method to determine if the
@@ -961,4 +993,35 @@ public class JsonUtils {
 		return true;
 	}
 
+	/**
+	 *
+	 * Validates the JSON document against a schema file.
+	 *
+	 * @param  jsonStr	String containing the JSON doc
+	 * @param  jsonSchemaPath full path to a valid JSON schema file
+	 * @return String the validation results/report
+	 *
+	 *
+	 */
+    public static String jsonSchemaValidation(String jsonStr, String jsonSchemaPath) throws ValidationException {
+    	try {
+    		msoLogger.debug("JSON document to be validated: " + jsonStr);
+    		JsonNode document = JsonLoader.fromString(jsonStr);
+//    		JsonNode document = JsonLoader.fromFile(jsonDoc);
+    		JsonNode schema = JsonLoader.fromPath(jsonSchemaPath);
+
+    		JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+    		JsonValidator validator = factory.getValidator();
+
+    		ProcessingReport report = validator.validate(schema, document);
+    		msoLogger.debug("JSON schema validation report: " + report.toString());
+    		return report.toString();
+    	} catch (IOException e) {
+    		msoLogger.debug("IOException performing JSON schema validation on document: " + e.toString());
+    		throw new ValidationException(e.getMessage());
+    	} catch (ProcessingException e) {
+    		msoLogger.debug("ProcessingException performing JSON schema validation on document: " + e.toString());
+    		throw new ValidationException(e.getMessage());
+    	}
+    }
 }

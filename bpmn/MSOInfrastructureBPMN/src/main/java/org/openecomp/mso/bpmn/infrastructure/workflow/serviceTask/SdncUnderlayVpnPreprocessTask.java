@@ -26,9 +26,6 @@ import org.openecomp.mso.bpmn.core.BaseTask;
 import org.openecomp.mso.requestsdb.RequestsDatabase;
 import org.openecomp.mso.requestsdb.ResourceOperationStatus;
 
-/**
- * Created by 10112215 on 2017/9/26.
- */
 public class SdncUnderlayVpnPreprocessTask extends BaseTask {
     public static final String RESOURCE_OPER_TYPE = "resourceOperType";
     private RequestsDatabase requestsDB = RequestsDatabase.getInstance();
@@ -43,7 +40,7 @@ public class SdncUnderlayVpnPreprocessTask extends BaseTask {
         String serviceId = (String) execution.getVariable("serviceId");
         serviceId = StringUtils.isBlank(serviceId) ? (String) execution.getVariable("serviceInstanceId") : serviceId;
         String operationId = (String) execution.getVariable("operationId");
-        String resourceTemplateUUID = (String) execution.getVariable("resourceUUID");
+        String resourceTemplateUUID = (String) execution.getVariable("resourceTemplateUUID");
         resourceTemplateUUID = StringUtils.isBlank(resourceTemplateUUID) ? (String) execution.getVariable("resourceTemplateId") : resourceTemplateUUID;
         ResourceOperationStatus resourceOperationStatus = requestsDB.getResourceOperationStatus(serviceId, operationId, resourceTemplateUUID);
         return resourceOperationStatus.getOperType();

@@ -24,7 +24,6 @@ import org.camunda.bpm.engine.ProcessEngineServices
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity
 import org.camunda.bpm.engine.repository.ProcessDefinition
-import org.camunda.bpm.engine.runtime.Execution
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -48,7 +47,7 @@ import org.openecomp.mso.bpmn.core.domain.ServiceDecomposition
 import org.openecomp.mso.bpmn.core.domain.VnfResource
 import org.openecomp.mso.bpmn.core.domain.AllottedResource
 import org.openecomp.mso.bpmn.core.domain.ModelInfo
-import org.openecomp.mso.bpmn.core.domain.HomingSolution
+
 import org.openecomp.mso.bpmn.core.RollbackData
 import org.openecomp.mso.bpmn.vcpe.scripts.MapGetter
 import org.openecomp.mso.bpmn.vcpe.scripts.MapSetter
@@ -67,7 +66,6 @@ class DeleteVcpeResCustServiceTest extends GroovyTestBase {
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
-		super.setUpBeforeClass()
 		request = FileUtil.readResourceFile("__files/VCPE/DeleteVcpeResCustService/request.json")
 	}
 	  

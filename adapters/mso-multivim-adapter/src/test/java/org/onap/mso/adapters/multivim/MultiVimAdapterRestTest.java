@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
 public class MultiVimAdapterRestTest {
 
     private static final String vfModuleName = "CB_BASE_VF";
-    private static final String amdocsAzureVfw = "AmdocsAzureVfw";
+    private static final String amdocsAzureVfw = "VdnsNewTosca..aria-dnsscaling..module-1";
     private static final String ariaResponseCreateVfModule1 = "{\"id\":10}";
     private static final String ariaResponseGetStack1 = "{\"execution_id\":\"10\",\"service_name\":\"test15\",\"service_template_name\":\"test15-template\",\"status\":\"succeeded\",\"workflow_name\":\"start\"}";
     private static MsoPropertiesFactory msoPropertiesFactory = new MsoPropertiesFactory();
@@ -64,7 +64,7 @@ public class MultiVimAdapterRestTest {
             @Mock
             public ToscaCsar getToscaCsarByUuid(String artifactUuid) {
                 ToscaCsar toscaCsar = new ToscaCsar();
-                toscaCsar.setName("service-AmdocsAzureVfwService-csar.csar");
+                toscaCsar.setName("service-VdnsNewToscaService-csar.csar");
                 return toscaCsar;
             }
         };

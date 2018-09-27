@@ -20,9 +20,9 @@
 
 package org.openecomp.mso.apihandler.camundabeans;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-
 import org.openecomp.mso.apihandler.common.CommonConstants;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * JavaBean JSON class for a "gMyServiceInput" which contains the xml payload that
@@ -33,7 +33,7 @@ public class CamundaBpmnRequestInput {
     @JsonProperty(CommonConstants.CAMUNDA_VALUE)
     private BpmnRequest value;
     @JsonProperty(CommonConstants.CAMUNDA_TYPE)
-    private String type = "String";
+    private final String type = "String";
 
 
     public CamundaBpmnRequestInput() {

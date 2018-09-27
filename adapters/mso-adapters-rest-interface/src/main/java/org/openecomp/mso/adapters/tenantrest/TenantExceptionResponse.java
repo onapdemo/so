@@ -20,15 +20,11 @@
 
 package org.openecomp.mso.adapters.tenantrest;
 
-
-
 import org.openecomp.mso.openstack.exceptions.MsoExceptionCategory;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
-import org.jboss.resteasy.annotations.providers.NoJackson;
 
 @XmlRootElement(name = "createTenantResponse")
-@NoJackson
 public class TenantExceptionResponse implements Serializable {
 
     private static final long serialVersionUID = -9062290006520066109L;
@@ -38,10 +34,6 @@ public class TenantExceptionResponse implements Serializable {
 	private Boolean rolledBack;
 
 	public TenantExceptionResponse () {}
-
-	public TenantExceptionResponse (String message) {
-		this.message = message;
-	}
 
 	public TenantExceptionResponse (String message, MsoExceptionCategory category, boolean rolledBack) {
 		this.message = message;

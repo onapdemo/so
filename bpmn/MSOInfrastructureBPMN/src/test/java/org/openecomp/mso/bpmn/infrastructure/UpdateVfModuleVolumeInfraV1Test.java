@@ -76,7 +76,7 @@ public class UpdateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		String updaetVfModuleVolRequest =
 			FileUtil.readResourceFile("__files/UpdateVfModuleVolumeInfraV1/updateVfModuleVolume_VID_request.json");
 		
-		Map<String, Object> testVariables = new HashMap<String, Object>();
+		Map<String, Object> testVariables = new HashMap<>();
 		testVariables.put("requestId", "TEST-REQUEST-ID-0123");
 		testVariables.put("serviceInstanceId", "test-service-instance-id");
 		testVariables.put("volumeGroupId", "78987");
@@ -84,7 +84,7 @@ public class UpdateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		TestAsyncResponse asyncResponse = invokeAsyncProcess("UpdateVfModuleVolumeInfraV1",	"v1", businessKey, updaetVfModuleVolRequest, testVariables);
 		WorkflowResponse response = receiveResponse(businessKey, asyncResponse, 10000);
 
-		String responseBody = response.getResponse();
+		String responseBody = response.getContent();
 		System.out.println("Workflow (Synch) Response:\n" + responseBody);
 		
 		injectVNFRestCallbacks(callbacks, "volumeGroupUpdate");
@@ -122,7 +122,7 @@ public class UpdateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		String updaetVfModuleVolRequest =
 			FileUtil.readResourceFile("__files/UpdateVfModuleVolumeInfraV1/updateVfModuleVolume_VID_request_2.json");
 		
-		Map<String, Object> testVariables = new HashMap<String, Object>();
+		Map<String, Object> testVariables = new HashMap<>();
 		testVariables.put("requestId", "TEST-REQUEST-ID-0123");
 		testVariables.put("serviceInstanceId", "test-service-instance-id");
 		testVariables.put("volumeGroupId", "78987");
@@ -130,7 +130,7 @@ public class UpdateVfModuleVolumeInfraV1Test extends WorkflowTest {
 		TestAsyncResponse asyncResponse = invokeAsyncProcess("UpdateVfModuleVolumeInfraV1",	"v1", businessKey, updaetVfModuleVolRequest, testVariables);
 		WorkflowResponse response = receiveResponse(businessKey, asyncResponse, 10000);
 
-		String responseBody = response.getResponse();
+		String responseBody = response.getContent();
 		System.out.println("Workflow (Synch) Response:\n" + responseBody);
 		
 		injectVNFRestCallbacks(callbacks, "volumeGroupUpdate");

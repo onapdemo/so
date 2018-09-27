@@ -32,13 +32,13 @@ public class Recipe extends MavenLikeVersioning implements Serializable {
 	private static final long serialVersionUID = 768026109321305392L;
 
     private int id;
-    protected String action;
-    private String description;
-    protected String orchestrationUri;
+    protected String action = null;
+    private String description = null;
+    protected String orchestrationUri = null;
     private int recipeTimeout;
-    private String serviceType;
-
-	private Timestamp created;
+    private String serviceType = null;
+    private String paramXSD = null;
+	private Timestamp created = null;
     
     public Recipe () {
         super ();
@@ -100,11 +100,25 @@ public class Recipe extends MavenLikeVersioning implements Serializable {
 		this.created = created;
 	}
 
-	@Override
+    /**
+     * @return Returns the paramXSD.
+     */
+    public String getParamXSD() {
+        return paramXSD;
+    }
+  
+    /**
+     * @param paramXSD The paramXSD to set.
+     */
+    public void setParamXSD(String paramXSD) {
+        this.paramXSD = paramXSD;
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("RECIPE: " + action);
-        sb.append(",uri=" + orchestrationUri);
+        sb.append("RECIPE: ").append(action);
+        sb.append(",uri=").append(orchestrationUri);
     	
         if (created != null) {
 	        sb.append (",created=");

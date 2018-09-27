@@ -20,7 +20,7 @@
 
 package org.openecomp.mso.adapters.vfc.exceptions;
 
-import javax.ws.rs.core.Response;;
+import javax.ws.rs.core.Response;
 
 public class ApplicationException extends Exception {
 
@@ -39,7 +39,7 @@ public class ApplicationException extends Exception {
      * </p>
      * 
      * @param errorCode error status
-     * @param errorDetail error detail
+     * @param errorMsg error detail
      * @since ONAP Amsterdam Release 2017-9-6
      */
     public ApplicationException(int errorCode, String errorMsg) {

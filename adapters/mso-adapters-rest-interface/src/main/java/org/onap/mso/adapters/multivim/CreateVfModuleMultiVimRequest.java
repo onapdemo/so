@@ -19,6 +19,7 @@ public class CreateVfModuleMultiVimRequest extends VfRequestCommon {
 
   private String vnfId;
   private String vnfModelName;
+  private String vfModuleModelName;
   private String vfModuleName;
   private String multicloudName;
   private CloudType cloudType;
@@ -81,5 +82,13 @@ public class CreateVfModuleMultiVimRequest extends VfRequestCommon {
 
   public void setVnfModelName(String vnfModelName) {
     this.vnfModelName = vnfModelName;
+  }
+
+  public String getVfModuleModelName() {
+    return vfModuleModelName;
+  }
+
+  public void setVfModuleModelName(String vfModuleModelName) {
+    this.vfModuleModelName = vfModuleModelName;
   }
 }

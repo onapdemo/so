@@ -135,7 +135,7 @@ public class WorkflowResource extends ProcessEngineAwareService {
 				}
 
 				String processInstanceId = processInstance.getId();
-				workflowResponse.setProcessInstanceID(processInstanceId);				
+				workflowResponse.setProcessInstanceId(processInstanceId);				
 
 				responseMap = getResponseMap(processInstance, processKey, timeProcessEnded);
 
@@ -172,23 +172,23 @@ public class WorkflowResource extends ProcessEngineAwareService {
 
 			workflowResponse.setMessage("Fail");
 			if (endedWithNoResponse) {
-				workflowResponse.setResponse("Process ended without producing a response");
+				workflowResponse.setContent("Process ended without producing a response");
 			} else {
-				workflowResponse.setResponse("Request timed out, process state: " + state);
+				workflowResponse.setContent("Request timed out, process state: " + state);
 			}
-			workflowResponse.setProcessInstanceID(processInstanceId);
+			workflowResponse.setProcessInstanceId(processInstanceId);
 			recordEvents(processKey, workflowResponse, startTime);
 			workflowResponse.setMessageCode(500);
 			return Response.status(500).entity(workflowResponse).build();
 		} catch (Exception ex) {
 			msoLogger.debug(LOGMARKER + "Exception in startProcessInstance by key",ex);
 			workflowResponse.setMessage("Fail" );
-			workflowResponse.setResponse("Error occurred while executing the process: " + ex.getMessage());
-			if (processInstance != null) workflowResponse.setProcessInstanceID(processInstance.getId());
+			workflowResponse.setContent("Error occurred while executing the process: " + ex.getMessage());
+			if (processInstance != null) workflowResponse.setProcessInstanceId(processInstance.getId());
 			
 			msoLogger.error(MessageEnum.BPMN_GENERAL_EXCEPTION_ARG,  "BPMN", MDC.get(processKey), 
 					MsoLogger.ErrorCode.UnknownError, LOGMARKER + workflowResponse.getMessage()
-					+ " for processKey: " + processKey + " with response: " + workflowResponse.getResponse());
+					+ " for processKey: " + processKey + " with content: " + workflowResponse.getContent());
 			
 			workflowResponse.setMessageCode(500);
 			recordEvents(processKey, workflowResponse, startTime);
@@ -221,11 +221,11 @@ public class WorkflowResource extends ProcessEngineAwareService {
 		
 		msoLogger.recordMetricEvent ( startTime, MsoLogger.StatusCode.COMPLETE, MsoLogger.ResponseCode.Suc, 
 				LOGMARKER + response.getMessage() + " for processKey: "
-				+ processKey + " with response: " + response.getResponse(), "BPMN", MDC.get(processKey), null);
+				+ processKey + " with content: " + response.getContent(), "BPMN", MDC.get(processKey), null);
 		
 		msoLogger.recordAuditEvent (startTime, MsoLogger.StatusCode.COMPLETE, MsoLogger.ResponseCode.Suc, 
 				LOGMARKER + response.getMessage() + " for processKey: "
-				+ processKey + " with response: " + response.getResponse());
+				+ processKey + " with content: " + response.getContent());
 	}
 
 	private void setLogContext(String processKey, Map<String, Object> inputVariables) {
@@ -262,13 +262,13 @@ public class WorkflowResource extends ProcessEngineAwareService {
 
 	private void processResponseMap(WorkflowResponse workflowResponse, Map<String, Object> responseMap) {
 		Object object = responseMap.get("Response");
-		String response = object == null ? null : String.valueOf(object);
-		if(response == null){
+		String content = object == null ? null : String.valueOf(object);
+		if (content == null){
 			object = responseMap.get("WorkflowResponse");
-			response = object == null ? null : String.valueOf(object);
+			content = object == null ? null : String.valueOf(object);
 		}
 
-		workflowResponse.setResponse(response); 
+		workflowResponse.setContent(content); 
 
 		object = responseMap.get("ResponseCode");
 		String responseCode = object == null ? null : String.valueOf(object);
@@ -450,7 +450,7 @@ public class WorkflowResource extends ProcessEngineAwareService {
 					Object responseCodeObject = getVariableFromHistory(historyService, processInstanceId, prefix + "ResponseCode");
 					String responseCode = responseCodeObject == null ? null : String.valueOf(responseCodeObject);
 					msoLogger.debug(LOGMARKER + prefix + "ResponseCode: " + responseCode);
-					responseMap = new HashMap<String, Object>();
+					responseMap = new HashMap<>();
 					responseMap.put("WorkflowResponse", workflowResponse);
 					responseMap.put("ResponseCode", responseCode);
 					responseMap.put("Status", "Success");
@@ -467,7 +467,7 @@ public class WorkflowResource extends ProcessEngineAwareService {
 					if(workflowExceptionObject instanceof WorkflowException) {
 						workflowException = (WorkflowException) workflowExceptionObject;
 						workflowExceptionText = workflowException.toString();
-						responseMap = new HashMap<String, Object>();
+						responseMap = new HashMap<>();
 						responseMap.put("WorkflowException", workflowExceptionText);
 						responseMap.put("ResponseCode", workflowException.getErrorCode());
 						responseMap.put("Status", "Fail");
@@ -477,7 +477,7 @@ public class WorkflowResource extends ProcessEngineAwareService {
 						Object object = getVariableFromHistory(historyService, processInstanceId, prefix + "ResponseCode");
 						String responseCode = object == null ? null : String.valueOf(object);
 						workflowExceptionText = (String) workflowExceptionObject;
-						responseMap = new HashMap<String, Object>();
+						responseMap = new HashMap<>();
 						responseMap.put("WorkflowException", workflowExceptionText);
 						responseMap.put("ResponseCode", responseCode);
 						responseMap.put("Status", "Fail");
@@ -496,7 +496,7 @@ public class WorkflowResource extends ProcessEngineAwareService {
 					object = getVariableFromHistory(historyService, processInstanceId, prefix + "ResponseCode");
 					String responseCode = object == null ? null : String.valueOf(object);
 					msoLogger.debug(LOGMARKER + prefix + "ResponseCode: " + responseCode);
-					responseMap = new HashMap<String, Object>();
+					responseMap = new HashMap<>();
 					responseMap.put("Response", response);
 					responseMap.put("ResponseCode", responseCode);
 					responseMap.put("Status", "Success");
@@ -511,7 +511,7 @@ public class WorkflowResource extends ProcessEngineAwareService {
 					object = getVariableFromHistory(historyService, processInstanceId, prefix + "ResponseCode");
 					String responseCode = object == null ? null : String.valueOf(object);
 					msoLogger.debug(LOGMARKER + prefix + "ResponseCode: " + responseCode);
-					responseMap = new HashMap<String, Object>();
+					responseMap = new HashMap<>();
 					responseMap.put("Response", errorResponse);
 					responseMap.put("ResponseCode", responseCode);
 					responseMap.put("Status", "Fail");
@@ -569,7 +569,7 @@ public class WorkflowResource extends ProcessEngineAwareService {
 		try {
 			ProcessEngineServices engine = getProcessEngineServices();
 			List<HistoricVariableInstance> variables = engine.getHistoryService().createHistoricVariableInstanceQuery().processInstanceId(processInstanceId).list();
-			Map<String,String> variablesMap = new HashMap<String,String>();
+			Map<String,String> variablesMap = new HashMap<>();
 			for (HistoricVariableInstance variableInstance: variables) {
 				variablesMap.put(variableInstance.getName(), variableInstance.getValue().toString());
 			}
@@ -584,31 +584,31 @@ public class WorkflowResource extends ProcessEngineAwareService {
 			
 			response.setVariables(variablesMap);
 			response.setMessage("Success");
-			response.setResponse("Successfully retrieved the variables"); 
-			response.setProcessInstanceID(processInstanceId);
+			response.setContent("Successfully retrieved the variables"); 
+			response.setProcessInstanceId(processInstanceId);
 
-			msoLogger.debug(LOGMARKER + response.getMessage() + " for processKey: " + processKey + " with response: " + response.getResponse());
+			msoLogger.debug(LOGMARKER + response.getMessage() + " for processKey: " + processKey + " with content: " + response.getContent());
 		} catch (Exception ex) {
 			response.setMessage("Fail");
-			response.setResponse("Failed to retrieve the variables," + ex.getMessage()); 
-			response.setProcessInstanceID(processInstanceId);
+			response.setContent("Failed to retrieve the variables," + ex.getMessage()); 
+			response.setProcessInstanceId(processInstanceId);
 			
 			msoLogger.error (MessageEnum.BPMN_GENERAL_EXCEPTION_ARG, "BPMN", MDC.get(processKey), MsoLogger.ErrorCode.UnknownError, LOGMARKER 
 					+ response.getMessage() 
 					+ " for processKey: " 
 					+ processKey 
-					+ " with response: " 
-					+ response.getResponse());
+					+ " with content: " 
+					+ response.getContent());
 			msoLogger.debug("Exception :",ex);
 		}
 		
 		msoLogger.recordMetricEvent ( startTime, MsoLogger.StatusCode.COMPLETE, MsoLogger.ResponseCode.Suc, 
 				LOGMARKER + response.getMessage() + " for processKey: "
-				+ processKey + " with response: " + response.getResponse(), "BPMN", MDC.get(processKey), null);
+				+ processKey + " with content: " + response.getContent(), "BPMN", MDC.get(processKey), null);
 		
 		msoLogger.recordAuditEvent (startTime, MsoLogger.StatusCode.COMPLETE, MsoLogger.ResponseCode.Suc, 
 				LOGMARKER + response.getMessage() + " for processKey: "
-				+ processKey + " with response: " + response.getResponse());
+				+ processKey + " with content: " + response.getContent());
 		
 		return response;
 	}

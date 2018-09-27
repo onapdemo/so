@@ -79,10 +79,10 @@ public class DeleteVnfInfraTest extends WorkflowTest {
 		MockDeleteGenericVnf();
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariables(variables, deleteVnfInfraRequest, "testRequestId123", "MIS%2F1604%2F0026%2FSW_INTERNET");
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "DeleteVnfInfra", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 		Object cascadeDelete = BPMNUtil.getRawVariable(processEngineRule, "DeleteVnfInfra", "DELVI_cascadeDelete");
 		String found = BPMNUtil.getVariable(processEngineRule, "DoDeleteVnf", "GENGV_FoundIndicator") ;
 		String inUse = BPMNUtil.getVariable(processEngineRule, "DeleteVnfInfra", "DELVI_vnfInUse");
@@ -109,10 +109,10 @@ public class DeleteVnfInfraTest extends WorkflowTest {
 		MockDeleteGenericVnf();
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariables(variables, deleteVnfInfraRequestCascadeDelete, "testRequestId123", "MIS%2F1604%2F0026%2FSW_INTERNET");
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "DeleteVnfInfra", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String found = BPMNUtil.getVariable(processEngineRule, "DoDeleteVnf", "GENGV_FoundIndicator") ;
 		String inUse = BPMNUtil.getVariable(processEngineRule, "DoDeleteVnf", "DoDVNF_vnfInUse");
@@ -139,11 +139,11 @@ public class DeleteVnfInfraTest extends WorkflowTest {
 		MockDeleteGenericVnf_404();
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariables(variables, deleteVnfInfraRequest, "testRequestId123", "MIS%2F1604%2F0026%2FSW_INTERNET");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "DeleteVnfInfra", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String found = BPMNUtil.getVariable(processEngineRule, "DoDeleteVnf", "GENGV_FoundIndicator") ;
 		String inUse = BPMNUtil.getVariable(processEngineRule, "DoDeleteVnf", "DoDVNF_vnfInUse");
@@ -173,11 +173,11 @@ public class DeleteVnfInfraTest extends WorkflowTest {
 		MockDeleteGenericVnf();
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariables(variables, deleteVnfInfraRequest, "testRequestId123", "MIS%2F1604%2F0026%2FSW_INTERNET");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "DeleteVnfInfra", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String found = BPMNUtil.getVariable(processEngineRule, "DoDeleteVnf", "GENGV_FoundIndicator") ;
 		String inUse = BPMNUtil.getVariable(processEngineRule, "DoDeleteVnf", "DoDVNF_vnfInUse");

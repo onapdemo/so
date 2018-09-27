@@ -33,14 +33,14 @@ public class ServiceRecipe extends MavenLikeVersioning implements Serializable {
 	private static final long serialVersionUID = 768026109321305392L;
 	
 	private int id;
-	private String serviceModelUUID;
-	private String action;
-	private String description;
-	private String orchestrationUri;
-	private String serviceParamXSD;
+	private String serviceModelUUID = null;
+	private String action = null;
+	private String description = null;
+	private String orchestrationUri = null;
+	private String serviceParamXSD = null;
 	private int recipeTimeout;
 	private Integer serviceTimeoutInterim;
-	private Timestamp created;
+	private Timestamp created = null;
 
 	private static final MsoLogger LOGGER = MsoLogger.getMsoLogger (MsoLogger.Catalog.GENERAL);
 	
@@ -139,8 +139,8 @@ public class ServiceRecipe extends MavenLikeVersioning implements Serializable {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("RECIPE: " + action);
-		sb.append(",uri=" + orchestrationUri);
+		sb.append("RECIPE: ").append(action);
+		sb.append(",uri=").append(orchestrationUri);
         if (created != null) {
 	        sb.append (",created=");
 	        sb.append (DateFormat.getInstance().format(created));

@@ -22,11 +22,15 @@ package org.openecomp.mso.db.catalog.beans;
 
 import java.io.Serializable;
 
+import com.openpojo.business.annotation.BusinessKey;
+
 // an embeddable class to represent the Composite key for NetworkResource in the 1707 db refactoring
 public class HeatTemplateArtifactUuidModelUuid implements Serializable {
 	
-	private String heatTemplateArtifactUuid;
-	private String modelUuid;
+	@BusinessKey
+	private String heatTemplateArtifactUuid = null;
+	@BusinessKey
+	private String modelUuid = null;
 	public static final long serialVersionUID = -1322322139926390329L;
 
 	public HeatTemplateArtifactUuidModelUuid() {
@@ -44,15 +48,12 @@ public class HeatTemplateArtifactUuidModelUuid implements Serializable {
 	public void setModelUuid(String modelUuid) {
 		this.modelUuid = modelUuid;
 	}
-	
+
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("heatTemplateArtifactUuid=" + this.heatTemplateArtifactUuid);
-		sb.append(" modelUuid=" + this.modelUuid);
-		return sb.toString();
+		return "heatTemplateArtifactUuid=" + this.heatTemplateArtifactUuid + " modelUuid=" + this.modelUuid;
 	}
-	
+
     @Override
     public boolean equals (Object o) {
         if (!(o instanceof HeatTemplateArtifactUuidModelUuid)) {
@@ -73,9 +74,7 @@ public class HeatTemplateArtifactUuidModelUuid implements Serializable {
     public int hashCode () {
         // hash code does not have to be a unique result - only that two objects that should be treated as equal
         // return the same value. so this should work.
-        int result;
-        result = this.heatTemplateArtifactUuid.hashCode() + this.modelUuid.hashCode();
-        return result;
+        return this.heatTemplateArtifactUuid.hashCode() + this.modelUuid.hashCode();
     }
 
 }

@@ -20,23 +20,20 @@
 package org.openecomp.mso.adapters.catalogdb.catalogrest;
 /* should be called QueryVnfResource.java */
 
-import org.openecomp.mso.db.catalog.beans.VnfResource;
-import org.openecomp.mso.db.catalog.beans.VnfResourceCustomization;
-import org.jboss.resteasy.annotations.providers.NoJackson;
-
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.openecomp.mso.db.catalog.beans.VnfResourceCustomization;
+
 @XmlRootElement(name = "serviceVnfs")
-@NoJackson
 public class QueryServiceVnfs extends CatalogQuery {
 	private List<VnfResourceCustomization> serviceVnfs;
 	private final String template =
         "\n"+
-//        "\t{ \"vnfResource\"                    : {\n"+
         "\t{ \"modelInfo\"                    : {\n"+
 			"\t\t\"modelName\"              : <MODEL_NAME>,\n"+
 			"\t\t\"modelUuid\"              : <MODEL_UUID>,\n"+
@@ -50,10 +47,9 @@ public class QueryServiceVnfs extends CatalogQuery {
 			"\t\"nfType\"              		: <NF_TYPE>,\n"+
 			"\t\"nfRole\"              		: <NF_ROLE>,\n"+
 			"\t\"nfNamingCode\"         	: <NF_NAMING_CODE>,\n"+
-//        "\t}\n"+
+			"\t\"multiStageDesign\"         : <MULTI_STEP_DESIGN>,\n"+
 			"<_VFMODULES_>\n" + 
 			"\t}";
-//			"\t}}";
 
 	public QueryServiceVnfs() { super(); serviceVnfs = new ArrayList<>(); }
 	public QueryServiceVnfs(List<VnfResourceCustomization> vlist) { 
@@ -72,29 +68,29 @@ public class QueryServiceVnfs extends CatalogQuery {
 
 	@Override
 	public String toString () {
-		StringBuilder buf = new StringBuilder();
+		StringBuilder sb = new StringBuilder();
 
 		boolean first = true;
 		int i = 1;
 		for (VnfResourceCustomization o : serviceVnfs) {
-			buf.append(i+"\t");
-			if (!first) buf.append("\n"); first = false;
-			buf.append(o);
+			sb.append(i).append("\t");
+			if (!first) sb.append("\n"); first = false;
+			sb.append(o);
 		}
-		return buf.toString();
+		return sb.toString();
     }
 
 	@Override
 	public String JSON2(boolean isArray, boolean isEmbed) {
-		StringBuilder buf = new StringBuilder();
-		if (!isEmbed && isArray) buf.append("{ ");
-		if (isArray) buf.append("\"serviceVnfs\": [");
+		StringBuilder sb = new StringBuilder();
+		if (!isEmbed && isArray) sb.append("{ ");
+		if (isArray) sb.append("\"serviceVnfs\": [");
 		Map<String, String> valueMap = new HashMap<>();
 		String sep = "";
 		boolean first = true;
 
 		for (VnfResourceCustomization o : serviceVnfs) {
-			if (first) buf.append("\n"); first = false;
+			if (first) sb.append("\n"); first = false;
 
 			boolean vrNull = o.getVnfResource() == null ? true : false;
 
@@ -104,21 +100,22 @@ public class QueryServiceVnfs extends CatalogQuery {
 		    put(valueMap, "MODEL_VERSION",            vrNull ? null : o.getVnfResource().getVersion());
 		    put(valueMap, "MODEL_CUSTOMIZATION_UUID", o.getModelCustomizationUuid());
 		    put(valueMap, "MODEL_INSTANCE_NAME",      o.getModelInstanceName());
-		    put(valueMap, "TOSCA_NODE_TYPE",     vrNull ? null : o.getVnfResource().getToscaNodeType());
-		    put(valueMap, "NF_FUNCTION", o.getNfFunction());
-		    put(valueMap, "NF_TYPE", o.getNfType());
-		    put(valueMap, "NF_ROLE", o.getNfRole());
-		    put(valueMap, "NF_NAMING_CODE", o.getNfNamingCode());
+		    put(valueMap, "TOSCA_NODE_TYPE",          vrNull ? null : o.getVnfResource().getToscaNodeType());
+		    put(valueMap, "NF_FUNCTION",              o.getNfFunction());
+		    put(valueMap, "NF_TYPE",                  o.getNfType());
+		    put(valueMap, "NF_ROLE",                  o.getNfRole());
+		    put(valueMap, "NF_NAMING_CODE",           o.getNfNamingCode());
+		    put(valueMap, "MULTI_STEP_DESIGN",        o.getMultiStageDesign());
 
 		    String subitem = new QueryVfModule(vrNull ? null : o.getVfModuleCustomizations()).JSON2(true, true); 
 		    valueMap.put("_VFMODULES_",               subitem.replaceAll("(?m)^", "\t\t"));
 
-            buf.append(sep+ this.setTemplate(template, valueMap));
+            sb.append(sep).append(this.setTemplate(template, valueMap));
             sep = ",\n";
 		}
-		if (!first) buf.append("\n");
-		if (isArray) buf.append("]");
-		if (!isEmbed && isArray) buf.append("}");
-		return buf.toString();
+		if (!first) sb.append("\n");
+		if (isArray) sb.append("]");
+		if (!isEmbed && isArray) sb.append("}");
+		return sb.toString();
 	}
 }

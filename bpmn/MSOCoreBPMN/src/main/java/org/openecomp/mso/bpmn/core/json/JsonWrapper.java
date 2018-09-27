@@ -77,24 +77,18 @@ public abstract class JsonWrapper implements Serializable  {
 	public JSONObject toJsonObject() {
 
         ObjectMapper mapper = new ObjectMapper();
-       // mapper.configure(SerializationConfig.Feature.WRAP_ROOT_VALUE, true);
+       // mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, true);
         //mapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
 
         mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, true);
-       // mapper.enable(org.codehaus.jackson.map.DeserializationConfig.Feature.UNWRAP_ROOT_VALUE);
+       // mapper.enable(com.fasterxml.jackson.map.DeserializationFeature.UNWRAP_ROOT_VALUE);
         JSONObject json = new JSONObject();
          try {
 			json = new JSONObject(mapper.writeValueAsString(this));
-		} catch (JsonGenerationException e) {
+		} catch (JSONException | IOException e) {
 			LOGGER.debug("Exception :",e);
-		} catch (JsonMappingException e) {
-			LOGGER.debug("Exception :",e);
-		} catch (JSONException e) {
-			LOGGER.debug("Exception :",e);
-		} catch (IOException e) {
-			LOGGER.debug("Exception :",e);
-		}		
-         return json; 
+		}
+        return json;
 	}
 	
 	public String listToJson(List list)  {
@@ -104,10 +98,6 @@ public abstract class JsonWrapper implements Serializable  {
 		String jsonString = "";
 		try {
 			jsonString = mapper.writeValueAsString(list);
-		} catch (JsonGenerationException e) {
-			LOGGER.debug("Exception :",e);
-		} catch (JsonMappingException e) {
-			LOGGER.debug("Exception :",e);
 		} catch (IOException e) {
 			LOGGER.debug("Exception :",e);
 		}

@@ -154,12 +154,7 @@ public abstract class SDNCConnector {
 			LOGGER.info(MessageEnum.RA_RESPONSE_FROM_SDNC, responseContent, "SDNC", "");
 			return createResponseFromContent(statusCode, statusMessage, responseContent, rt);
 
-		} catch (SocketTimeoutException e) {
-			String errMsg = "Request to SDNC timed out";
-			logError(errMsg, e);
-			return createErrorResponse(HttpURLConnection.HTTP_CLIENT_TIMEOUT, errMsg, rt);
-
-		} catch (ConnectTimeoutException e) {
+		} catch (SocketTimeoutException | ConnectTimeoutException e) {
 			String errMsg = "Request to SDNC timed out";
 			logError(errMsg, e);
 			return createErrorResponse(HttpURLConnection.HTTP_CLIENT_TIMEOUT, errMsg, rt);
@@ -257,7 +252,7 @@ public abstract class SDNCConnector {
 		//   </error>
 		// </errors>
 
-		String output = null;
+		StringBuilder output = null;
 
 		try {
 			XPathFactory xpathFactory = XPathFactory.newInstance();
@@ -306,9 +301,9 @@ public abstract class SDNCConnector {
 
 				if (!info.isEmpty()) {
 					if (output == null) {
-						output = "[" + info + "]";
+						output = new StringBuilder("[" + info + "]");
 					} else {
-						output += " [" + info + "]";
+						output.append(" [").append(info).append("]");
 					}
 				}
 			}
@@ -317,6 +312,6 @@ public abstract class SDNCConnector {
 				MsoLogger.ErrorCode.DataError, "Exception while analyzing errors", e);
 		}
 
-		return output;
+		return output.toString();
 	}
 }

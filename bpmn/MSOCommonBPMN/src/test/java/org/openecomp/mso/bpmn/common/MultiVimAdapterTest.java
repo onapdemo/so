@@ -2,6 +2,8 @@ package org.openecomp.mso.bpmn.common;
 
 import org.camunda.bpm.engine.test.Deployment;
 import org.junit.Test;
+import org.openecomp.mso.bpmn.core.WorkflowException;
+import org.openecomp.mso.bpmn.mock.StubMultiVimAdapter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,9 +11,6 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import org.openecomp.mso.bpmn.core.WorkflowException;
-import org.openecomp.mso.bpmn.mock.StubMultiVimAdapter;
 
 public class MultiVimAdapterTest extends WorkflowTest {
 

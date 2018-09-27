@@ -20,6 +20,20 @@
  */
 
 package org.openecomp.mso.asdc.installer;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.onap.sdc.api.IDistributionClient;
+import org.onap.sdc.api.notification.IArtifactInfo;
+import org.onap.sdc.api.notification.INotificationData;
+import org.onap.sdc.api.notification.IResourceInstance;
+import org.onap.sdc.api.results.IDistributionClientDownloadResult;
+import org.openecomp.mso.asdc.client.ASDCConfiguration;
+import org.openecomp.mso.asdc.client.exceptions.ArtifactInstallerException;
+import org.openecomp.mso.db.catalog.beans.*;
+import org.openecomp.mso.logger.MessageEnum;
+import org.openecomp.mso.logger.MsoLogger;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -27,29 +41,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
-
-import org.openecomp.mso.logger.MessageEnum;
-import org.openecomp.sdc.api.IDistributionClient;
-import org.openecomp.sdc.api.notification.IArtifactInfo;
-import org.openecomp.sdc.api.notification.INotificationData;
-import org.openecomp.sdc.api.notification.IResourceInstance;
-import org.openecomp.sdc.api.notification.IVfModuleMetadata;
-import org.openecomp.sdc.api.results.IDistributionClientDownloadResult;
-import org.openecomp.mso.asdc.client.ASDCConfiguration;
-import org.openecomp.mso.asdc.client.exceptions.ArtifactInstallerException;
-import org.openecomp.mso.db.catalog.beans.NetworkResourceCustomization;
-import org.openecomp.mso.db.catalog.beans.AllottedResourceCustomization;
-import org.openecomp.mso.db.catalog.beans.Service;
-import org.openecomp.mso.db.catalog.beans.ServiceToAllottedResources;
-import org.openecomp.mso.db.catalog.beans.ServiceToNetworks;
-import org.openecomp.mso.db.catalog.beans.VnfResource;
-
-import org.openecomp.mso.logger.MsoLogger;
 /**
  * This structure exists to avoid having issues if the order of the vfResource/vfmodule artifact is not good (tree structure).
  *
@@ -104,8 +95,8 @@ public final class VfResourceStructure {
 		resourceInstance=resourceinstance;
 
 
-		vfModulesStructureList = new LinkedList<VfModuleStructure>();
-		artifactsMapByUUID =  new HashMap<String, VfModuleArtifact>();
+		vfModulesStructureList = new LinkedList<>();
+		artifactsMapByUUID = new HashMap<>();
 	}
 
 	//@Override
@@ -142,10 +133,10 @@ public final class VfResourceStructure {
 
 	public void createVfModuleStructures() throws ArtifactInstallerException {
 
+		//for vender tosca VNF there is no VFModule in VF
 		if (vfModulesMetadataList == null) {
-//			throw new ArtifactInstallerException("VfModule Meta DATA could not be decoded properly or was not present in the notification");
-			LOGGER.warn(MessageEnum.ASDC_GENERAL_WARNING, "", "", MsoLogger.ErrorCode.BusinessProcesssError, "vf module metadalist not found");
-			return;
+		    LOGGER.info(MessageEnum.ASDC_GENERAL_INFO,"There is no VF mudules in the VF.", "ASDC", "createVfModuleStructures");
+		    return;
 		}
 		for (IVfModuleData vfModuleMeta:vfModulesMetadataList) {
 			vfModulesStructureList.add(new VfModuleStructure(this,vfModuleMeta));

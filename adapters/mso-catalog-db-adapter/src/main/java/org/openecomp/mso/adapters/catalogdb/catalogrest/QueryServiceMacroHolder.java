@@ -21,33 +21,37 @@ package org.openecomp.mso.adapters.catalogdb.catalogrest;
 
 import org.openecomp.mso.db.catalog.beans.Service;
 import org.openecomp.mso.db.catalog.beans.ServiceMacroHolder;
-import org.jboss.resteasy.annotations.providers.NoJackson;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.Map;
 
 @XmlRootElement(name = "serviceResources")
-@NoJackson
 public class QueryServiceMacroHolder extends CatalogQuery {
-	private ServiceMacroHolder serviceMacroHolder;
-	private final String template =
+    private ServiceMacroHolder serviceMacroHolder;
+    private static final String LINE_BEGINNING = "(?m)^";
+	private static final String template =
 		"{ \"serviceResources\"    : {\n"+
 			"\t\"modelInfo\"       : {\n"+
             "\t\t\"modelName\"          : <SERVICE_MODEL_NAME>,\n"+
             "\t\t\"modelUuid\"          : <SERVICE_MODEL_UUID>,\n"+
             "\t\t\"modelInvariantUuid\" : <SERVICE_MODEL_INVARIANT_ID>,\n"+
-            "\t\t\"modelVersion\"       : <SERVICE_MODEL_VERSION>\n"+	
+            "\t\t\"modelVersion\"       : <SERVICE_MODEL_VERSION>\n"+
             "\t},\n"+
-            "\t\"serviceType\" : <SERVICE_TYPE>,\n"+
-            "\t\"serviceRole\" : <SERVICE_ROLE>,\n"+
+            "\t\"serviceType\"        : <SERVICE_TYPE>,\n"+
+            "\t\"serviceRole\"        : <SERVICE_ROLE>,\n"+
             "\t\"toscaCsarArtifactUUID\" : <TOSCA_CSAR_ARTIFACT_UUID>,\n"+
+            "\t\"environmentContext\" : <ENVIRONMENT_CONTEXT>,\n"+
+            "\t\"workloadContext\"    : <WORKLOAD_CONTEXT>,\n"+
             "<_SERVICEVNFS_>,\n"+
             "<_SERVICENETWORKS_>,\n"+
             "<_SERVICEALLOTTEDRESOURCES_>\n"+
         "\t}}";
 
-	public QueryServiceMacroHolder() { super(); serviceMacroHolder = new ServiceMacroHolder(); }
+	public QueryServiceMacroHolder() {
+	    super();
+	    serviceMacroHolder = new ServiceMacroHolder();
+	}
 	public QueryServiceMacroHolder(ServiceMacroHolder vlist) { serviceMacroHolder = vlist; }
 
 	public ServiceMacroHolder getServiceResources(){ return this.serviceMacroHolder; }
@@ -59,7 +63,9 @@ public class QueryServiceMacroHolder extends CatalogQuery {
 	@Override
 	public String JSON2(boolean isArray, boolean x) {
 		Service service = serviceMacroHolder.getService();
-		if (service == null) return "\"serviceResources\": null";
+		if (service == null) {
+            return "\"serviceResources\": null";
+		}
 
 		StringBuilder buf = new StringBuilder();
 		Map<String, String> valueMap = new HashMap<>();
@@ -70,17 +76,19 @@ public class QueryServiceMacroHolder extends CatalogQuery {
 		put(valueMap, "SERVICE_MODEL_VERSION",      service.getVersion()); //getServiceModelVersion());
 		put(valueMap, "SERVICE_TYPE",               service.getServiceType());
 		put(valueMap, "SERVICE_ROLE",               service.getServiceRole());
+		put(valueMap, "ENVIRONMENT_CONTEXT",        service.getEnvironmentContext());
+		put(valueMap, "WORKLOAD_CONTEXT",           service.getWorkloadContext());
 		put(valueMap, "TOSCA_CSAR_ARTIFACT_UUID",   service.getToscaCsarArtifactUUID());
 
 	    String subitem;
 	    subitem = new QueryServiceVnfs(serviceMacroHolder.getVnfResourceCustomizations()).JSON2(true, true); 
-	    valueMap.put("_SERVICEVNFS_",               subitem.replaceAll("(?m)^", "\t"));
+	    valueMap.put("_SERVICEVNFS_",               subitem.replaceAll(LINE_BEGINNING, "\t"));
 
 		subitem = new QueryServiceNetworks(serviceMacroHolder.getNetworkResourceCustomization()).JSON2(true, true);
-		valueMap.put("_SERVICENETWORKS_",           subitem.replaceAll("(?m)^", "\t"));
+		valueMap.put("_SERVICENETWORKS_",           subitem.replaceAll(LINE_BEGINNING, "\t"));
 
 		subitem = new QueryAllottedResourceCustomization(serviceMacroHolder.getAllottedResourceCustomization()).JSON2(true, true);
-		valueMap.put("_SERVICEALLOTTEDRESOURCES_",  subitem.replaceAll("(?m)^", "\t"));
+		valueMap.put("_SERVICEALLOTTEDRESOURCES_",  subitem.replaceAll(LINE_BEGINNING, "\t"));
 
         buf.append(this.setTemplate(template, valueMap));
 		return buf.toString();

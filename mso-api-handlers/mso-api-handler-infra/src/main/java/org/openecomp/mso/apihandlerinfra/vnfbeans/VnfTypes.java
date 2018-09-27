@@ -91,9 +91,13 @@ public class VnfTypes {
      */
     public List<VnfType> getVnfType() {
         if (vnfType == null) {
-            vnfType = new ArrayList<VnfType>();
+            vnfType = new ArrayList<>();
         }
         return this.vnfType;
+    }
+    
+    public void setVnfType(List<VnfType> vnfType) {
+       this.vnfType = vnfType;
     }
 
 }

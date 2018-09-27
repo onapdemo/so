@@ -64,10 +64,10 @@ public final class XmlTool {
 	private static final Map<String, Integer> ENTITIES = new HashMap<>();
 	private static final MsoLogger LOGGER = MsoLogger.getMsoLogger (MsoLogger.Catalog.BPEL);
 	static {
-		ENTITIES.put("amp", new Integer(38));
-		ENTITIES.put("quot", new Integer(34));
-		ENTITIES.put("lt", new Integer(60));
-		ENTITIES.put("gt", new Integer(62));
+		ENTITIES.put("amp", 38);
+		ENTITIES.put("quot", 34);
+		ENTITIES.put("lt", 60);
+		ENTITIES.put("gt", 62);
 	}
 
 	/**
@@ -130,7 +130,7 @@ public final class XmlTool {
 
 	/**
 	 * Encodes a value so it can be used inside an XML text element.
-	 * @param s the string to encode
+	 * @param value the string to encode
 	 * @return the encoded string
 	 */
 	public static String encode(Object value) {
@@ -155,7 +155,7 @@ public final class XmlTool {
 				out.append("&amp;");
 				modified = true;
 			} else if (c < 32 || c > 126) {
-				out.append("&#" + (int)c + ";");
+				out.append("&#").append((int) c).append(";");
 				modified = true;
 			} else {
 				out.append(c);
@@ -171,7 +171,7 @@ public final class XmlTool {
 	
 	/**
 	 * Encodes a value so it can be used inside an XML attribute.
-	 * @param s the string to encode
+	 * @param value the string to encode
 	 * @return the encoded string
 	 */
 	public static String encodeAttr(Object value) {
@@ -199,7 +199,7 @@ public final class XmlTool {
 				out.append("&amp;");
 				modified = true;
 			} else if (c < 32 || c > 126) {
-				out.append("&#" + (int)c + ";");
+				out.append("&#").append((int) c).append(";");
 				modified = true;
 			} else {
 				out.append(c);

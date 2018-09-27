@@ -20,29 +20,34 @@
 
 package org.openecomp.mso.db.catalog.beans;
 
-import org.openecomp.mso.db.catalog.utils.MavenLikeVersioning;
-
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.openecomp.mso.db.catalog.utils.MavenLikeVersioning;
 
 public class Service extends MavenLikeVersioning implements Serializable {
 	
 	private static final long serialVersionUID = 768026109321305392L;
 
-	private String modelName;
-	private String description;
-	private String modelUUID;
-	private String modelInvariantUUID;
-	private Timestamp created;
-	private String toscaCsarArtifactUUID;
-	private String modelVersion;
-	private String serviceType;
-	private String serviceRole;
-	private Map<String,ServiceRecipe> recipes;
-	private Set<ServiceToResourceCustomization> serviceResourceCustomizations;
+	private String modelName = null;
+	private String description = null;
+	private String modelUUID = null;
+	private String modelInvariantUUID = null;
+	private Timestamp created = null;
+	private String toscaCsarArtifactUUID = null;
+	private String modelVersion = null;
+	private String category = null;
+	private String serviceType = null;
+	private String serviceRole = null;
+	private String environmentContext = null;
+	private String workloadContext = null;
+	private Map<String,ServiceRecipe> recipes = new HashMap<>();
+	private Set<ServiceToResourceCustomization> serviceResourceCustomizations = new HashSet<>();
 	
 	public Service() {}
 	
@@ -115,8 +120,22 @@ public class Service extends MavenLikeVersioning implements Serializable {
 		this.modelVersion = modelVersion;
 	}
 
-	
-	public String getServiceType() {
+    /**
+     * @return Returns the category.
+     */
+    public String getCategory() {
+        return category;
+    }
+
+    
+    /**
+     * @param category The category to set.
+     */
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getServiceType() {
 		return serviceType;
 	}
 
@@ -131,18 +150,36 @@ public class Service extends MavenLikeVersioning implements Serializable {
 	public void setServiceRole(String serviceRole) {
 		this.serviceRole = serviceRole;
 	}
+	public String getEnvironmentContext() {
+		return this.environmentContext;
+	}
+	public void setEnvironmentContext(String environmentContext) {
+		this.environmentContext = environmentContext;
+	}
+
+	public String getWorkloadContext() {
+		return this.workloadContext;
+	}
+	public void setWorkloadContext(String workloadContext) {
+		this.workloadContext = workloadContext;
+	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("SERVICE: name=" + modelName + ",modelVersion=" + modelVersion + ",description=" + description+",modelInvariantUUID="+modelInvariantUUID+",toscaCsarArtifactUUID="+toscaCsarArtifactUUID+",serviceType="+serviceType+",serviceRole="+serviceRole);
+		sb.append("SERVICE: name=").append(modelName).append(",modelVersion=").append(modelVersion)
+			.append(",description=").append(description).append(",modelInvariantUUID=").append(modelInvariantUUID)
+
+			.append(",toscaCsarArtifactUUID=").append(toscaCsarArtifactUUID).append(",serviceType=").append(serviceType)
+			.append(",serviceRole=").append(serviceRole).append(",envtContext=").append(this.environmentContext)
+			.append(",workloadContext=").append(this.workloadContext);
 		for (String recipeAction : recipes.keySet()) {
 			ServiceRecipe recipe = recipes.get(recipeAction);
-			sb.append ("\n" + recipe.toString());
+			sb.append("\n").append(recipe.toString());
 		}
 		
 		for(ServiceToResourceCustomization serviceResourceCustomization : serviceResourceCustomizations) {
-			sb.append("\n" + serviceResourceCustomization.toString());
+			sb.append("\n").append(serviceResourceCustomization.toString());
 		}
 		if (created != null) {
 		        sb.append (",created=");

@@ -83,11 +83,11 @@ public class DeleteNetworkInstanceTest extends WorkflowTest {
 		// setup simulators
 		mockSDNCAdapterTopology("DeleteNetworkV2mock/sdncDeleteNetworkTopologySimResponse.xml", "SvcAction>delete");
 		MockNetworkAdapter("bdc5efe8-404a-409b-85f6-0dcc9eebae30", 200, "deleteNetworkResponse_Success.xml");
-		MockGetNetworkByIdWithDepth("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_Success.xml", "1");
+		MockGetNetworkByIdWithDepth("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_Success.xml", "all");
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 		MockGetCloudRegion("RDM2WAGPLCP", 200, "DeleteNetworkV2/cloudRegion30_AAIResponse_Success.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		variables.put("mso-request-id", "testRequestId");
 		variables.put("requestId", "testRequestId");
 		variables.put("isBaseVfModule", "true");
@@ -153,14 +153,14 @@ public class DeleteNetworkInstanceTest extends WorkflowTest {
 		mockSDNCAdapterTopology("DeleteNetworkV2mock/sdncDeleteNetworkTopologySimResponse.xml", "SvcAction>unassign");
 		mockSDNCAdapterTopology("DeleteNetworkV2mock/sdncDeleteNetworkTopologySimResponse.xml", "SvcAction>deactivate");
 		MockNetworkAdapter("bdc5efe8-404a-409b-85f6-0dcc9eebae30", 200, "deleteNetworkResponse_Success.xml");
-		MockGetNetworkByIdWithDepth("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_Success.xml", "1");
+		MockGetNetworkByIdWithDepth("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_Success.xml", "all");
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 		MockGetCloudRegion("RDM2WAGPLCP", 200, "DeleteNetworkV2/cloudRegion30_AAIResponse_Success.xml");
 
 		String networkModelInfo = "  {\"modelName\": \"modelName\", " + '\n' +
 		                          "   \"networkType\": \"modelName\" }";
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		variables.put("testMessageId", "88f65519-9a38-4c4b-8445-9eb4a5a5af56");
 		variables.put("msoRequestId", "testRequestId");
 		variables.put("requestId", "testRequestId");
@@ -229,14 +229,14 @@ public class DeleteNetworkInstanceTest extends WorkflowTest {
 		mockSDNCAdapterTopology("CreateNetworkV2mock/sdncCreateNetworkTopologySimResponse.xml", "SvcAction>activate");
 		MockNetworkAdapter("bdc5efe8-404a-409b-85f6-0dcc9eebae30", 200, "deleteNetworkResponse_Success.xml");
 		MockNetworkAdapterContainingRequest("createNetworkRequest", 200, "CreateNetworkV2/createNetworkResponse_Success.xml");
-		MockGetNetworkByIdWithDepth	("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_Success.xml", "1");
+		MockGetNetworkByIdWithDepth	("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_Success.xml", "all");
 		mockUpdateRequestDB(200, "Database/DBUpdateResponse.xml");
 		MockGetCloudRegion("RDM2WAGPLCP", 200, "DeleteNetworkV2/cloudRegion30_AAIResponse_Success.xml");
 
 		String networkModelInfo = "  {\"modelCustomizationId\": \"uuid-nrc-001-1234\", " + '\n' +
                 "   \"modelInvariantId\": \"was-ist-das-001-1234\" }";
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		variables.put("testMessageId", "88f65519-9a38-4c4b-8445-9eb4a5a5af56");
 		variables.put("msoRequestId", "testRequestId");
 		variables.put("requestId", "testRequestId");
@@ -254,7 +254,7 @@ public class DeleteNetworkInstanceTest extends WorkflowTest {
 
 		executeAsyncWorkflow(processEngineRule, "DeleteNetworkInstance", variables);
 		//WorkflowResponse workflowResponse = executeAsyncWorkflow(processEngineRule, "DeleteNetworkInstance", variables);
-		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String workflowResp = BPMNUtil.getVariable(processEngineRule, "DeleteNetworkInstance", "WorkflowResponse");
 		Assert.assertNotNull(workflowResp);

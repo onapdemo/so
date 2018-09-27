@@ -21,7 +21,7 @@
 
 package org.openecomp.mso.apihandlerinfra.e2eserviceinstancebeans;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.openecomp.mso.requestsdb.OperationStatus;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_DEFAULT)
@@ -35,6 +35,14 @@ public class GetE2EServiceInstanceResponse {
 
 	public void setOperationStatus(OperationStatus requestDB) {
 		this.operation = requestDB;
+	}
+
+	public OperationStatus getOperation() {
+		return operation;
+	}
+
+	public void setOperation(OperationStatus operation) {
+		this.operation = operation;
 	}
 
 }

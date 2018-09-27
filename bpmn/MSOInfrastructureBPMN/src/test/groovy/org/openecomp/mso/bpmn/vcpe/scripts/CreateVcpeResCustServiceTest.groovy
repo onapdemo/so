@@ -24,7 +24,6 @@ import org.camunda.bpm.engine.ProcessEngineServices
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity
 import org.camunda.bpm.engine.repository.ProcessDefinition
-import org.camunda.bpm.engine.runtime.Execution
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -33,6 +32,7 @@ import org.junit.Ignore
 import org.mockito.MockitoAnnotations
 import org.camunda.bpm.engine.delegate.BpmnError
 import org.openecomp.mso.bpmn.core.WorkflowException
+import org.openecomp.mso.bpmn.core.domain.HomingSolution
 import org.openecomp.mso.bpmn.mock.FileUtil
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse
@@ -67,7 +67,6 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
-		super.setUpBeforeClass()
 		request = FileUtil.readResourceFile("__files/VCPE/CreateVcpeResCustService/request.json")
 	}
 	  
@@ -85,7 +84,7 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 	// ***** preProcessRequest *****
 			
 	@Test
-	// @Ignore  
+	@Ignore // 1802 merge
 	public void preProcessRequest() {
 		ExecutionEntity mex = setupMock()
 		def map = setupMap(mex)
@@ -110,6 +109,8 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 		assertTrue(map.containsKey("subscriberInfo"))
 		
 		verify(mex).setVariable("brgWanMacAddress", "brgmac")
+		verify(mex).setVariable("customerLocation", ["customerLatitude":"32.897480", "customerLongitude":"-97.040443", "customerName":"some_company"])
+		verify(mex).setVariable("homingService", "sniro")
 		assertTrue(map.containsKey("serviceInputParams"))
 		assertTrue(map.containsKey(Prefix+"requestInfo"))
 		
@@ -133,7 +134,7 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 	}
 			
 	@Test
-	// @Ignore  
+	@Ignore // 1802 merge
 	public void preProcessRequest_EmptyParts() {
 		ExecutionEntity mex = setupMock()
 		def map = setupMap(mex)
@@ -142,6 +143,7 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 		def req = request
 					.replace('"source"', '"sourceXXX"')
 					.replace('"BRG_WAN_MAC_Address"', '"BRG_WAN_MAC_AddressXXX"')
+					.replace('"Customer_Location"', '"Customer_LocationXXX"')
 		
 		when(mex.getVariable("bpmnRequest")).thenReturn(req)
 		when(mex.getVariable("serviceInstanceId")).thenReturn(null)
@@ -165,6 +167,8 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 		assertTrue(map.containsKey("subscriberInfo"))
 		
 		assertEquals("", map.get("brgWanMacAddress"))
+		assertEquals("", map.get("customerLocation"))
+		assertEquals("oof", map.get("homingService"))
 		assertTrue(map.containsKey("serviceInputParams"))
 		assertTrue(map.containsKey(Prefix+"requestInfo"))
 		
@@ -465,7 +469,7 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 		verify(mex).setVariable("createTXCAR", true)
 		verify(mex).setVariable("allottedResourceModelInfoTXC", "modelB")
 		verify(mex).setVariable("allottedResourceRoleTXC", "TXCr")
-		verify(mex).setVariable("allottedResourceTypeTXC", "TunnelXConn")
+		verify(mex).setVariable("allottedResourceTypeTXC", "Tunnel XConn")
 		verify(mex).setVariable("parentServiceInstanceIdTXC", "homeB")
 	}
 			
@@ -485,7 +489,7 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 		verify(mex, never()).setVariable("createTXCAR", true)
 		verify(mex, never()).setVariable("allottedResourceModelInfoTXC", "modelB")
 		verify(mex, never()).setVariable("allottedResourceRoleTXC", "TXCr")
-		verify(mex, never()).setVariable("allottedResourceTypeTXC", "TunnelXConn")
+		verify(mex, never()).setVariable("allottedResourceTypeTXC", "Tunnel XConn")
 		verify(mex, never()).setVariable("parentServiceInstanceIdTXC", "homeB")
 	}
 			
@@ -1083,7 +1087,7 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 	private ServiceDecomposition initFilterVnfs(ExecutionEntity mex) {
 		List<VnfResource> vnflst = new LinkedList<>()
 		vnflst.add(makeVnf("", "BRG"))
-		vnflst.add(makeVnf("2", "TunnelXConn"))
+		vnflst.add(makeVnf("2", "Tunnel XConn"))
 		vnflst.add(makeVnf("3", ""))
 		vnflst.add(makeVnf("4", "BRG"))
 		vnflst.add(makeVnf("5", "other"))
@@ -1145,7 +1149,7 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 		HomingSolution home = mock(HomingSolution.class)
 		
 		when(ar.toJsonStringNoRootName()).thenReturn("json"+id)
-		when(ar.getAllottedResourceType()).thenReturn("TunnelXConn")
+		when(ar.getAllottedResourceType()).thenReturn("Tunnel XConn")
 		when(ar.getModelInfo()).thenReturn(mod)
 		when(ar.getAllottedResourceRole()).thenReturn("TXCr")
 		when(ar.getHomingSolution()).thenReturn(home)
@@ -1182,7 +1186,7 @@ class CreateVcpeResCustServiceTest extends GroovyTestBase {
 		vnflst.add(makeVnf("A", "BRG"))
 		vnflst.add(makeVnf("B", ""))
 		vnflst.add(makeVnf("C", ""))
-		vnflst.add(makeVnf("D", "TunnelXConn"))
+		vnflst.add(makeVnf("D", "Tunnel XConn"))
 		
 		when(mex.getVariable(DBGFLAG)).thenReturn("true")
 		when(mex.getVariable("createVcpeServiceRequest")).thenReturn(request)

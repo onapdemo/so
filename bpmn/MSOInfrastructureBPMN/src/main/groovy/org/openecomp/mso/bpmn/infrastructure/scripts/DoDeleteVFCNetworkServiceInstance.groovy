@@ -20,7 +20,7 @@
 
 package org.openecomp.mso.bpmn.infrastructure.scripts;
 
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.*
 import groovy.xml.XmlUtil
 import groovy.json.*
 import org.openecomp.mso.bpmn.common.scripts.AbstractServiceTaskProcessor 
@@ -32,13 +32,17 @@ import org.openecomp.mso.rest.APIResponse
 import java.util.UUID;
 
 import org.camunda.bpm.engine.delegate.BpmnError 
-import org.camunda.bpm.engine.runtime.Execution
+import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.apache.commons.lang3.*
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.web.util.UriUtils 
 import org.openecomp.mso.rest.RESTClient 
 import org.openecomp.mso.rest.RESTConfig
 import org.openecomp.mso.rest.APIResponse;
+import org.openecomp.mso.rest.RESTConfig
+import org.openecomp.mso.rest.RESTClient
+
+
 
 /**
  * This groovy class supports the <class>DoDeleteVFCNetworkServiceInstance.bpmn</class> process.
@@ -46,7 +50,7 @@ import org.openecomp.mso.rest.APIResponse;
  */
 public class DoDeleteVFCNetworkServiceInstance extends AbstractServiceTaskProcessor {
 
-
+            
     String vfcUrl = "/vfc/rest/v1/vfcadapter"
     
     String host = "http://mso.mso.testlab.openecomp.org:8080"
@@ -60,7 +64,7 @@ public class DoDeleteVFCNetworkServiceInstance extends AbstractServiceTaskProces
      * Inclouds:
      * generate the nsOperationKey
      */
-    public void preProcessRequest (Execution execution) {
+    public void preProcessRequest (DelegateExecution execution) {
         def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
         String msg = ""
         utils.log("INFO", " *** preProcessRequest() *** ", isDebugEnabled)
@@ -99,9 +103,74 @@ public class DoDeleteVFCNetworkServiceInstance extends AbstractServiceTaskProces
 	}
 
     /**
+     * unwind NS from AAI relationship
+     */
+    public void deleteNSRelationship(DelegateExecution execution) {
+        def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
+        utils.log("INFO"," ***** addNSRelationship *****",  isDebugEnabled)
+        String nsInstanceId = execution.getVariable("resourceInstanceId")
+        if(nsInstanceId == null || nsInstanceId == ""){
+            utils.log("INFO"," Delete NS failed",  isDebugEnabled)
+            return
+        }
+        String globalSubscriberId = execution.getVariable("globalSubscriberId")
+        String serviceType = execution.getVariable("serviceType")
+        String serviceId = execution.getVariable("serviceId")
+        String deleteRelationPayload = """<relationship xmlns="http://org.openecomp.aai.inventory/v11">
+                                            <related-to>service-instance</related-to>
+                                            <related-link>/aai/v11/business/customers/customer/${globalSubscriberId}/service-subscriptions/service-subscription/${serviceType}/service-instances/service-instance/${nsInstanceId}</related-link>
+                                            <relationship-data>
+                                                <relationship-key>customer.global-customer-id</relationship-key>
+                                                <relationship-value>${globalSubscriberId}</relationship-value>
+                                            </relationship-data>
+                                            <relationship-data>
+                                                <relationship-key>service-subscription.service-type</relationship-key>
+                                                <relationship-value>${serviceType}</relationship-value>
+                                            </relationship-data>
+                                           <relationship-data>
+                                                <relationship-key>service-instance.service-instance-id</relationship-key>
+                                                <relationship-value>${nsInstanceId}</relationship-value>
+                                            </relationship-data>           
+                                        </relationship>"""
+        String endpoint = execution.getVariable("URN_aai_endpoint")
+        utils.log("INFO","Add Relationship req:\n" + deleteRelationPayload,  isDebugEnabled)
+        String url = endpoint + "/aai/v11/business/customers/customer/" + globalSubscriberId + "/service-subscriptions/service-subscription/" + serviceType + "/service-instances/service-instance/" + serviceId + "/relationship-list/relationship"
+
+        APIResponse aaiRsp = executeAAIDeleteCall(execution, url, deleteRelationPayload)
+        utils.log("INFO","aai response status code:" + aaiRsp.getStatusCode(),  isDebugEnabled)
+        utils.log("INFO","aai response content:" + aaiRsp.getResponseBodyAsString(),  isDebugEnabled)
+        utils.log("INFO"," *****Exit addNSRelationship *****",  isDebugEnabled)
+    }
+
+    public APIResponse executeAAIDeleteCall(DelegateExecution execution, String url, String payload){
+        def isDebugEnabled = execution.getVariable("isDebugLogEnabled")
+        utils.log("INFO", " ======== Started Execute AAI Delete Process ======== ",  isDebugEnabled)
+        APIResponse apiResponse = null
+        try{
+            String uuid = utils.getRequestID()
+            utils.log("INFO","Generated uuid is: " + uuid,  isDebugEnabled)
+            utils.log("INFO","URL to be used is: " + url,  isDebugEnabled)
+            String userName = execution.getVariable("URN_aai_auth")
+            String password = execution.getVariable("URN_mso_msoKey")
+            String basicAuthCred = utils.getBasicAuth(userName,password)
+            RESTConfig config = new RESTConfig(url);
+            RESTClient client = new RESTClient(config).addHeader("X-FromAppId", "MSO").addHeader("X-TransactionId", uuid).addHeader("Content-Type", "application/xml").addHeader("Accept","application/xml");
+            if (basicAuthCred != null && !"".equals(basicAuthCred)) {
+                client.addAuthorizationHeader(basicAuthCred)
+            }
+            apiResponse = client.httpDelete(payload)
+            utils.log("INFO","======== Completed Execute AAI Delete Process ======== ",  isDebugEnabled)
+        }catch(Exception e){
+            utils.log("ERROR","Exception occured while executing AAI Put Call. Exception is: \n" + e,  isDebugEnabled)
+            throw new BpmnError("MSOWorkflowException")
+        }
+        return apiResponse
+    }
+
+    /**
      * delete NS task
      */
-    public void deleteNetworkService(Execution execution) {
+    public void deleteNetworkService(DelegateExecution execution) {
         def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
         utils.log("INFO", " *** deleteNetworkService  start *** ", isDebugEnabled)
         String nsOperationKey = execution.getVariable("nsOperationKey");
@@ -121,7 +190,7 @@ public class DoDeleteVFCNetworkServiceInstance extends AbstractServiceTaskProces
     /**
      * instantiate NS task
      */
-    public void terminateNetworkService(Execution execution) {
+    public void terminateNetworkService(DelegateExecution execution) {
         def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
         utils.log("INFO", " *** terminateNetworkService  start *** ", isDebugEnabled)
         String nsOperationKey = execution.getVariable("nsOperationKey") 
@@ -140,7 +209,7 @@ public class DoDeleteVFCNetworkServiceInstance extends AbstractServiceTaskProces
     /**
      * query NS task
      */
-    public void queryNSProgress(Execution execution) {
+    public void queryNSProgress(DelegateExecution execution) {
         def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
         utils.log("INFO", " *** queryNSProgress  start *** ", isDebugEnabled)
         String jobId = execution.getVariable("jobId")
@@ -160,10 +229,10 @@ public class DoDeleteVFCNetworkServiceInstance extends AbstractServiceTaskProces
     /**
      * delay 5 sec 
      */
-    public void timeDelay(Execution execution) {
+    public void timeDelay(DelegateExecution execution) {
         try {
             Thread.sleep(5000);
-        } catch(InterruptedException e) {     
+        } catch(InterruptedException e) {           
             utils.log("INFO", "Time Delay exception" + e, isDebugEnabled)
         }
     }
@@ -171,7 +240,7 @@ public class DoDeleteVFCNetworkServiceInstance extends AbstractServiceTaskProces
     /**
      * finish NS task
      */
-    public void finishNSDelete(Execution execution) {
+    public void finishNSDelete(DelegateExecution execution) {
         //no need to do anything util now
     }
 
@@ -180,7 +249,7 @@ public class DoDeleteVFCNetworkServiceInstance extends AbstractServiceTaskProces
      * url: the url of the request
      * requestBody: the body of the request
      */
-    private APIResponse postRequest(Execution execution, String url, String requestBody){
+    private APIResponse postRequest(DelegateExecution execution, String url, String requestBody){
         def isDebugEnabled = execution.getVariable("isDebugLogEnabled")
         utils.log("INFO", " ======== Started Execute VFC adapter Post Process ======== ", isDebugEnabled)
         utils.log("INFO", "url:"+url +"\nrequestBody:"+ requestBody, isDebugEnabled)
@@ -202,7 +271,7 @@ public class DoDeleteVFCNetworkServiceInstance extends AbstractServiceTaskProces
      * url: the url of the request
      * requestBody: the body of the request
      */
-    private APIResponse deleteRequest(Execution execution, String url, String requestBody){
+    private APIResponse deleteRequest(DelegateExecution execution, String url, String requestBody){
         def isDebugEnabled = execution.getVariable("isDebugLogEnabled")
         utils.log("INFO", " ======== Started Execute VFC adapter Delete Process ======== ", isDebugEnabled)       
         utils.log("INFO", "url:"+url +"\nrequestBody:"+ requestBody, isDebugEnabled)

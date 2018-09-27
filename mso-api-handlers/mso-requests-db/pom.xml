@@ -3,9 +3,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
  	<parent>
-		<groupId>org.openecomp.so</groupId>
+		<groupId>org.onap.so</groupId>
 		<artifactId>mso-api-handlers</artifactId>
-		<version>1.1.1-SNAPSHOT</version>
+		<version>1.2.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>mso-requests-db</artifactId>
@@ -97,7 +97,7 @@
 			<version>1.0.0.Final</version>
 		</dependency>
 		<dependency>
-			<groupId>org.openecomp.so</groupId>
+			<groupId>org.onap.so</groupId>
 			<artifactId>common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -119,7 +119,17 @@
 						</goals>
 						<configuration>
 							<hibernateDialect>org.hibernate.dialect.MySQL5Dialect</hibernateDialect>
-							<hibernateMapping>${project.basedir}/src/main/resources/InfraActiveRequests.hbm.xml,${project.basedir}/src/main/resources/SiteStatus.hbm.xml</hibernateMapping>
+							<hibernateMapping>
+								${project.basedir}/src/main/resources/InfraActiveRequests.hbm.xml,
+								${project.basedir}/src/main/resources/OperationalEnvServiceModelStatus.hbm.xml,
+								${project.basedir}/src/main/resources/OperationalEnvDistributionStatus.hbm.xml,
+								${project.basedir}/src/main/resources/OperationStatus.hbm.xml,
+								${project.basedir}/src/main/resources/SiteStatus.hbm.xml,
+								${project.basedir}/src/main/resources/ResourceOperationStatus.hbm.xml,
+								${project.basedir}/src/main/resources/WatchdogDistributionStatus.hbm.xml,
+								${project.basedir}/src/main/resources/WatchdogComponentDistributionStatus.hbm.xml,
+								${project.basedir}/src/main/resources/WatchdogServiceModVerIdLookup.hbm.xml
+							</hibernateMapping>
 							<target>SCRIPT</target>
 							<skip>false</skip>
 							<force>true</force>

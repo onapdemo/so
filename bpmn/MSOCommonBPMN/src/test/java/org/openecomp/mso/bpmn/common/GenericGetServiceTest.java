@@ -56,10 +56,10 @@ public class GenericGetServiceTest extends WorkflowTest {
 	@Deployment(resources = {"subprocess/GenericGetService.bpmn"})
 	public void testGenericGetService_success_serviceInstance() throws Exception{
 		MockGetServiceInstance("SDN-ETHERNET-INTERNET", "123456789", "MIS%252F1604%252F0026%252FSW_INTERNET", "GenericFlows/getServiceInstance.xml");
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", null, "SDN-ETHERNET-INTERNET", "123456789");
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
 		String obtainUrl = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_obtainObjectsUrl");
@@ -81,11 +81,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 
 		MockGetServiceSubscription("1604-MVM-26", "SDN-ETHERNET-INTERNET", "GenericFlows/getServiceSubscription.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesSubscription(variables, "", null , "1604-MVM-26", "SDN-ETHERNET-INTERNET");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -109,11 +109,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 		MockNodeQueryServiceInstanceByName("1604-MVM-26", "GenericFlows/getSIUrlByName.xml");
 		MockGetServiceInstance("SDN-ETHERNET-INTERNET", "123456789", "MIS%252F1604%252F0026%252FSW_INTERNET", "GenericFlows/getServiceInstance.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, null, "1604-MVM-26", null, null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -139,11 +139,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 		MockNodeQueryServiceInstanceById("MIS%2F1604%2F0026%2FSW_INTERNET", "GenericFlows/getSIUrlById.xml");
 		MockGetServiceInstance("SDN-ETHERNET-INTERNET", "123456789", "MIS%252F1604%252F0026%252FSW_INTERNET", "GenericFlows/getServiceInstance.xml");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", null, null, null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -168,11 +168,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 
 		MockGetServiceInstance_404("SDN-ETHERNET-INTERNET", "123456789", "MIS%2F1604%2F0026%2FSW_INTERNET");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", null, "SDN-ETHERNET-INTERNET", "123456789");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -192,11 +192,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 	public void testGenericGetService_success_serviceSubscription404() throws Exception{
 		MockGetServiceSubscription("1604-MVM-26", "SDN-ETHERNET-INTERNET", 404);
 		
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesSubscription(variables, "", "", "SDN-ETHERNET-INTERNET", "1604-MVM-26");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -219,11 +219,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 
 		MockNodeQueryServiceInstanceByName_404("1604-MVM-26");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "", "1604-MVM-26", null, null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -246,11 +246,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 
 		MockNodeQueryServiceInstanceById_404("MIS%2F1604%2F0026%2FSW_INTERNET");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", null, null, null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -273,11 +273,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 
 		MockGetServiceInstance("1604-MVM-26", "SDN-ETHERNET-INTERNET", "MIS%252F1604%252F0026%252FSW_INTERNET", " ");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", null, "SDN-ETHERNET-INTERNET", "123456789");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -297,11 +297,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 	public void testGenericGetService_success_serviceInstanceByNameEmpty() throws Exception{
 		MockNodeQueryServiceInstanceByName("1604-MVM-26", "");
 		
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "", "1604-MVM-26", null, null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -324,11 +324,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 
 	        MockNodeQueryServiceInstanceById("MIS[%]2F1604[%]2F0026[%]2FSW_INTERNET", "");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", null, null, null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -350,11 +350,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 	@Deployment(resources = {"subprocess/GenericGetService.bpmn"})
 	public void testGenericGetService_error_serviceInstanceInvalidVariables() throws Exception{
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, null, null, "SDN-ETHERNET-INTERNET", null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -375,11 +375,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 	@Deployment(resources = {"subprocess/GenericGetService.bpmn"})
 	public void testGenericGetService_success_serviceSubscriptionInvalidVariables() throws Exception{
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesSubscription(variables, "", "", "SDN-ETHERNET-INTERNET", null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -403,11 +403,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 
 		MockGetServiceInstance_500("SDN-ETHERNET-INTERNET", "123456789", "MIS%252F1604%252F0026%252FSW_INTERNET");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", "1604-MVM-26", "SDN-ETHERNET-INTERNET", "123456789");
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -430,11 +430,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 
 		MockNodeQueryServiceInstanceById_500("MIS%2F1604%2F0026%2FSW_INTERNET");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, "MIS%2F1604%2F0026%2FSW_INTERNET", null, null, null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -459,11 +459,11 @@ public class GenericGetServiceTest extends WorkflowTest {
 
 		MockNodeQueryServiceInstanceByName_500("1604-MVM-26");
 
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		setVariablesInstance(variables, null, "1604-MVM-26", null, null);
 
 		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
-		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
 		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
@@ -482,6 +482,61 @@ public class GenericGetServiceTest extends WorkflowTest {
 		assertEquals(expectedWorkflowException, workflowException);
 	}
 
+    @Test
+    @Deployment(resources = {"subprocess/GenericGetService.bpmn"})
+    public void testGenericGetService_success_serviceInstance_byNameServicePresent() throws Exception{
+
+        MockNodeQueryServiceInstanceByName("1604-MVM-26", "GenericFlows/getSIUrlByNameMultiCustomer.xml");
+        MockGetServiceInstance("XyCorporation", "123456789", "MIS%252F1604%252F0026%252FSW_INTERNET", "GenericFlows/getServiceInstance.xml");
+
+        Map<String, String> variables = new HashMap<>();
+        setVariablesInstance(variables, null, "1604-MVM-26", "XyCorporation", null);
+
+        WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
+        waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
+
+        String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
+        String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
+        String resourceLink = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_resourceLink");
+        String response = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "WorkflowResponse");
+        String workflowException = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "WorkflowException");
+        String siUrlResponseCode = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_obtainSIUrlResponseCode");
+
+        assertEquals("true", successIndicator);
+        assertEquals("true", found);
+		assertNotNull(resourceLink);
+        assertNotNull(response);
+        assertEquals("200", siUrlResponseCode);
+        assertEquals(null, workflowException);
+    }
+
+	@Test
+	@Deployment(resources = {"subprocess/GenericGetService.bpmn"})
+	public void testGenericGetService_success_serviceInstance_byNameServiceNotPresent() throws Exception{
+
+		MockNodeQueryServiceInstanceByName("1604-MVM-26", "GenericFlows/getSIUrlByNameMultiCustomer.xml");
+		MockGetServiceInstance("CorporationNotPresent", "123456789", "MIS%252F1604%252F0026%252FSW_INTERNET", "GenericFlows/getServiceInstance.xml");
+
+		Map<String, String> variables = new HashMap<>();
+		setVariablesInstance(variables, null, "1604-MVM-26", "CorporationNotPresent", null);
+
+		WorkflowResponse workflowResponse = executeWorkFlow(processEngineRule, "GenericGetService", variables);
+		waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
+
+		String successIndicator = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_SuccessIndicator");
+		String found = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_FoundIndicator");
+		String resourceLink = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_resourceLink");
+		String response = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "WorkflowResponse");
+		String workflowException = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "WorkflowException");
+		String siUrlResponseCode = BPMNUtil.getVariable(processEngineRule, "GenericGetService", "GENGS_obtainSIUrlResponseCode");
+
+		assertEquals("true", successIndicator);
+		assertEquals("false", found);
+		assertEquals(null, resourceLink);
+		assertEquals("  ", response);
+		assertEquals("200", siUrlResponseCode);
+		assertEquals(null, workflowException);
+	}
 
 	private void setVariablesInstance(Map<String, String> variables, String siId, String siName, String globalCustId, String serviceType) {
 		variables.put("isDebugLogEnabled", "true");

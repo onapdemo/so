@@ -30,13 +30,13 @@ public class HeatEnvironment extends MavenLikeVersioning implements Serializable
 	
 	private static final long serialVersionUID = 768026109321305392L;
 
-	private String artifactUuid;
+	private String artifactUuid = null;
 	private String name = null;
 	private String description = null;
 	private String environment = null;
-	private String artifactChecksum;
+	private String artifactChecksum = null;
 
-	private Timestamp created;
+	private Timestamp created = null;
 
 	public HeatEnvironment() {}
 
@@ -88,7 +88,7 @@ public class HeatEnvironment extends MavenLikeVersioning implements Serializable
     @Override
 	public String toString () {
 		StringBuilder sb = new StringBuilder();
-		sb.append ("Artifact UUID=" + this.artifactUuid);
+		sb.append("Artifact UUID=").append(this.artifactUuid);
         sb.append (", name=");
         sb.append (name);
         sb.append (", version=");

@@ -25,16 +25,20 @@ package org.openecomp.mso.db.catalog.beans;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 
+import com.openpojo.business.annotation.BusinessKey;
+
 import java.io.Serializable;
 
 public class VnfComponent implements Serializable {
-    private int vnfId;
+	@BusinessKey
+	private int vnfId;
+	@BusinessKey
     private String componentType = null;
     private Integer heatTemplateId;
     private Integer heatEnvironmentId;
     public static final long serialVersionUID = -1322322139926390329L;
 
-	private Timestamp created;
+	private Timestamp created = null;
     
     public VnfComponent() {}
 
@@ -78,10 +82,10 @@ public class VnfComponent implements Serializable {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("VnfComponent: ");
-        sb.append("vnfId=" + vnfId);
-        sb.append(",componentType=" + componentType);
-        sb.append(",heatTemplateId=" + heatTemplateId);
-        sb.append(",heatEnvironmentId=" + heatEnvironmentId);
+        sb.append("vnfId=").append(vnfId);
+        sb.append(",componentType=").append(componentType);
+        sb.append(",heatTemplateId=").append(heatTemplateId);
+        sb.append(",heatEnvironmentId=").append(heatEnvironmentId);
         
         if (created != null) {
 	        sb.append (",created=");
@@ -109,7 +113,7 @@ public class VnfComponent implements Serializable {
     public int hashCode () {
         // return the hashCode of the concat string of type+vnfId - should be okay.
         int result = 0;
-        result = (this.componentType + this.vnfId).toString().hashCode();
+        result = (this.componentType + this.vnfId).hashCode();
         return result;
     }
 }

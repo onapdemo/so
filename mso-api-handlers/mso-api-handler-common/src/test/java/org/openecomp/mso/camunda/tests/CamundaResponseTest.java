@@ -23,15 +23,11 @@ package org.openecomp.mso.camunda.tests;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
-
 import org.openecomp.mso.apihandler.camundabeans.CamundaResponse;
+import org.openecomp.mso.utils.RootIgnoringObjectMapper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * This class implements test methods of Camunda Beans.
@@ -41,19 +37,42 @@ import org.openecomp.mso.apihandler.camundabeans.CamundaResponse;
 public class CamundaResponseTest {
 
 	@Test
-	public final void testDeserialization() throws JsonGenerationException,
-			JsonMappingException, IOException {
-		ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
-		mapper.enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
-		
-		String responseBody = "{ \"response\": \"<xml>xml</xml>\","+
-				  "\"messageCode\": 200,"+
-				  "\"message\": \"Successfully started the process\"," +
-				  "\"processInstanceID\":null,\"variables\":null}";
-	
-		CamundaResponse response = mapper.readValue(responseBody, CamundaResponse.class);
-		assertEquals(response.toString(), "CamundaResponse [response=<xml>xml</xml>, messageCode=200, message=Successfully started the process]");
+	public final void testDeserializationWithoutRootElement() throws Exception {
 
+		ObjectMapper mapper = new RootIgnoringObjectMapper<CamundaResponse>(CamundaResponse.class);
+
+		String content = "{"
+			+ "\"messageCode\":202"
+			+ ",\"message\":\"Successfully started the process\""
+			+ ",\"content\":\"<xml>xml</xml>\""
+			+ ",\"processInstanceId\":\"4d3b3201a7ce\""
+			+ ",\"variables\":null"
+			+ "}";
+
+		CamundaResponse response = mapper.readValue(content, CamundaResponse.class);
+
+		assertEquals(
+			"CamundaResponse[processInstanceId=4d3b3201a7ce,messageCode=202,message=Successfully started the process,variables=null,content=<xml>xml</xml>]",
+			response.toString());
 	}
 
+	@Test
+	public final void testDeserializationWithRootElement() throws Exception {
+
+		ObjectMapper mapper = new RootIgnoringObjectMapper<CamundaResponse>(CamundaResponse.class);
+
+		String content = "{\"WorkflowResponse\":{"
+			+ "\"messageCode\":202"
+			+ ",\"message\":\"Successfully started the process\""
+			+ ",\"content\":\"<xml>xml</xml>\""
+			+ ",\"processInstanceId\":\"4d3b3201a7ce\""
+			+ ",\"variables\":null"
+			+ "}}";
+
+		CamundaResponse response = mapper.readValue(content, CamundaResponse.class);
+
+		assertEquals(
+			"CamundaResponse[processInstanceId=4d3b3201a7ce,messageCode=202,message=Successfully started the process,variables=null,content=<xml>xml</xml>]",
+			response.toString());
+	}
 }

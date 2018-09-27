@@ -136,5 +136,7 @@
 			<directory>../../simulator/homing-rest/target/</directory>
 			<outputDirectory>artifacts</outputDirectory>
 		</fileSet>
+
 	</fileSets>
+
 </assembly>

@@ -20,11 +20,10 @@
 
 package org.openecomp.mso.adapters.sdnc.impl;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import static org.junit.Assert.*;
 
-import org.junit.BeforeClass;
+import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.openecomp.mso.properties.MsoJavaProperties;
@@ -33,22 +32,22 @@ import org.openecomp.mso.properties.MsoPropertiesFactory;
 
 public class RequestTunablesTest {
 
-	public static MsoPropertiesFactory msoPropertiesFactory = new MsoPropertiesFactory();
+	private static MsoPropertiesFactory msoPropertiesFactory = new MsoPropertiesFactory();
 	
-    /**
-     * This method is called before any test occurs.
-     * It creates a fake tree from scratch
-     * @throws MsoPropertiesException 
-     */
-    @BeforeClass
-    public static final void prepare () throws MsoPropertiesException {
-        ClassLoader classLoader = RequestTunablesTest.class.getClassLoader ();
-        String path = classLoader.getResource ("mso.properties").toString ().substring (5);
-        
-        msoPropertiesFactory.initializeMsoProperties(RequestTunables.MSO_PROP_SDNC_ADAPTER, path);
-      
-    }
+	public static final String SDNC_PROP = MsoJavaProperties.class.getClassLoader().getResource("mso.sdnc.properties").toString().substring(5);
+	
+	@Before
+	public final void initBeforeEachTest() throws MsoPropertiesException {
+			msoPropertiesFactory.removeAllMsoProperties();
+			msoPropertiesFactory.initializeMsoProperties("MSO_PROP_SDNC_ADAPTER", SDNC_PROP);
+	}
 
+	@AfterClass
+	public static final void kill () throws MsoPropertiesException {
+
+		    msoPropertiesFactory.removeMsoProperties("MSO_PROP_SDNC_ADAPTER");
+	}
+	
     /**
      * Test method for
      * {@link org.openecomp.mso.adapters.sdnc.impl.RequestTunables#RequestTunables(java.lang.String, java.lang.String, java.lang.String, java.lang.String)}
@@ -57,18 +56,31 @@ public class RequestTunablesTest {
     @Test
     public final void testRequestTunables () {
         RequestTunables rt = new RequestTunables (null, null, "op", null,msoPropertiesFactory);
-        assert(rt.getReqId ().length ()==0);
+        assertEquals(0, rt.getReqId ().length ());
         rt = new RequestTunables ("reqId", "msoAction", null, "query",msoPropertiesFactory);
         rt.setTunables ();
         System.out.println(rt.toString ());
       //  assert (rt.getReqMethod ().equals ("toto"));
-        assert (rt.getTimeout () != null);
-        assert (rt.getAction ().equals ("query"));
-        assert (rt.getMsoAction ().equals ("msoAction"));
-        assert (rt.getHeaderName ().equals ("sdnc-request-header"));
-        assert (rt.getOperation ().length () == 0);
-        assert (rt.getAsyncInd ().equals ("N"));
-        assert (rt.getReqId ().equals ("reqId"));
+        assertNotNull(rt.getTimeout ());
+        assertEquals("query", rt.getAction ());
+        assertEquals("msoAction", rt.getMsoAction ());
+        assertEquals("sdnc-request-header", rt.getHeaderName ());
+        assertEquals(0, rt.getOperation ().length ());
+        assertEquals("N", rt.getAsyncInd ());
+        assertEquals("reqId", rt.getReqId ());
+    }
+    
+    @Test
+    public final void testRequestTunablesSet() {
+    	RequestTunables rt = new RequestTunables("reqId", "gammainternet", "service-configuration-operation", "changeactivate", msoPropertiesFactory);
+    	 rt.setTunables ();
+    	 assertNotNull(rt.getTimeout ());
+         assertEquals("changeactivate", rt.getAction ());
+         assertEquals("gammainternet", rt.getMsoAction ());
+         assertEquals("sdnc-request-header", rt.getHeaderName ());
+         assertEquals("service-configuration-operation", rt.getOperation ());
+         assertEquals("N", rt.getAsyncInd ());
+         assertEquals("reqId", rt.getReqId ());
     }
 
 }

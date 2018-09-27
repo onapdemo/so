@@ -154,7 +154,7 @@ public class MultiVimAdapterRest {
             Holder<Boolean> vfModuleCreated = new Holder<>();
 
             try {
-                multiVimAdapter.createVfModule(req.getCloudType(), req.getVnfId(), req.getVnfModelName(),
+                multiVimAdapter.createVfModule(req.getCloudType(), req.getVnfId(), req.getVfModuleModelName(),
                         req.getVfModuleName(), req.getMulticloudName(), req.getToscaCsarArtifactUuid(),
                         req.getInputs(), req.isSynchronous(), vfModuleStackId, outputs, vfModuleCreated);
 

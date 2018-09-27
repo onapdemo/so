@@ -37,7 +37,7 @@ import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
 
 import org.camunda.bpm.engine.delegate.BpmnError
-import org.camunda.bpm.engine.runtime.Execution
+import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.json.JSONObject;
 import org.apache.commons.lang3.*
 import org.apache.commons.codec.binary.Base64;
@@ -75,7 +75,7 @@ public class DoDeleteServiceInstance extends AbstractServiceTaskProcessor {
 	ExceptionUtil exceptionUtil = new ExceptionUtil()
 	JsonUtils jsonUtil = new JsonUtils()
 
-	public void preProcessRequest (Execution execution) {
+	public void preProcessRequest (DelegateExecution execution) {
 		def isDebugEnabled = execution.getVariable("isDebugLogEnabled")
 		utils.log("DEBUG"," ***** preProcessRequest *****",  isDebugEnabled)
 		String msg = ""
@@ -83,7 +83,7 @@ public class DoDeleteServiceInstance extends AbstractServiceTaskProcessor {
 		try {
 			String requestId = execution.getVariable("msoRequestId")
 			execution.setVariable("prefix",Prefix)
-
+			
 			//Inputs
 			//requestDetails.subscriberInfo. for AAI GET & PUT & SDNC assignToplology
 			String globalSubscriberId = execution.getVariable("globalSubscriberId") //globalCustomerId
@@ -150,57 +150,40 @@ public class DoDeleteServiceInstance extends AbstractServiceTaskProcessor {
 		utils.log("DEBUG"," ***** Exit preProcessRequest *****",  isDebugEnabled)
 	}
 
-	public void preProcessSDNCDelete (Execution execution) {
+	public void preProcessSDNCDelete (DelegateExecution execution) {
 		def isDebugEnabled = execution.getVariable("isDebugLogEnabled")
 		utils.log("DEBUG"," ***** preProcessSDNCDelete *****", isDebugEnabled)
 		String msg = ""
 
 		try {
-			def serviceInstanceId = execution.getVariable("serviceInstanceId")
-			def serviceInstanceName = execution.getVariable("serviceInstanceName")
-			def callbackURL = execution.getVariable("sdncCallbackUrl")
-			def requestId = execution.getVariable("msoRequestId")
-			def serviceId = execution.getVariable("productFamilyId")
-			def subscriptionServiceType = execution.getVariable("subscriptionServiceType")
-			def globalSubscriberId = execution.getVariable("globalSubscriberId") //globalCustomerId
+			def serviceInstanceId = execution.getVariable("serviceInstanceId") ?: ""
+			def serviceInstanceName = execution.getVariable("serviceInstanceName") ?: ""
+			def callbackURL = execution.getVariable("sdncCallbackUrl") ?: ""
+			def requestId = execution.getVariable("msoRequestId") ?: ""
+			def serviceId = execution.getVariable("productFamilyId") ?: ""
+			def subscriptionServiceType = execution.getVariable("subscriptionServiceType") ?: ""
+			def globalSubscriberId = execution.getVariable("globalSubscriberId") ?: "" //globalCustomerId
 
-			String serviceModelInfo = execution.getVariable("serviceModelInfo")
+			String serviceModelInfo = execution.getVariable("serviceModelInfo") ?: ""
 			def modelInvariantUuid = ""
 			def modelVersion = ""
 			def modelUuid = ""
 			def modelName = ""
 			if (!isBlank(serviceModelInfo))
 			{
-				modelInvariantUuid = jsonUtil.getJsonValue(serviceModelInfo, "modelInvariantUuid")
-				modelVersion = jsonUtil.getJsonValue(serviceModelInfo, "modelVersion")
-				modelUuid = jsonUtil.getJsonValue(serviceModelInfo, "modelUuid")
-				modelName = jsonUtil.getJsonValue(serviceModelInfo, "modelName")
+				modelInvariantUuid = jsonUtil.getJsonValue(serviceModelInfo, "modelInvariantUuid") ?: ""
+				modelVersion = jsonUtil.getJsonValue(serviceModelInfo, "modelVersion") ?: ""
+				modelUuid = jsonUtil.getJsonValue(serviceModelInfo, "modelUuid") ?: ""
+				modelName = jsonUtil.getJsonValue(serviceModelInfo, "modelName") ?: ""
 
-				if (modelInvariantUuid == null) {
-					modelInvariantUuid = ""
-				}
-				if (modelVersion == null) {
-					modelVersion = ""
-				}
-				if (modelUuid == null) {
-					modelUuid = ""
-				}
-				if (modelName == null) {
-					modelName = ""
-				}
-			}
-			if (serviceInstanceName == null) {
-				serviceInstanceName = ""
-			}
-			if (serviceId == null) {
-				serviceId = ""
 			}
 
-			def siParamsXml = execution.getVariable("siParamsXml")
-			def serviceType = execution.getVariable("serviceType")
-			if (serviceType == null)
+			def siParamsXml = execution.getVariable("siParamsXml") ?: ""
+			def msoAction = ""
+			// special URL for SDNW, msoAction helps set diff url in SDNCA
+			if("TRANSPORT".equalsIgnoreCase(execution.getVariable("serviceType")))
 			{
-				serviceType = ""
+				msoAction = "TRANSPORT"
 			}
 
 			def sdncRequestId = UUID.randomUUID().toString()
@@ -215,7 +198,7 @@ public class DoDeleteServiceInstance extends AbstractServiceTaskProcessor {
 							<sdncadapter:SvcAction>delete</sdncadapter:SvcAction>
 							<sdncadapter:SvcOperation>service-topology-operation</sdncadapter:SvcOperation>
 							<sdncadapter:CallbackUrl>${callbackURL}</sdncadapter:CallbackUrl>
-							<sdncadapter:MsoAction>${serviceType}</sdncadapter:MsoAction>
+							<sdncadapter:MsoAction>${msoAction}</sdncadapter:MsoAction>
 					</sdncadapter:RequestHeader>
 				<sdncadapterworkflow:SDNCRequestData>
 					<request-information>
@@ -264,7 +247,7 @@ public class DoDeleteServiceInstance extends AbstractServiceTaskProcessor {
 		utils.log("DEBUG"," *****Exit preProcessSDNCDelete *****", isDebugEnabled)
 	}
 
-	public void postProcessSDNCDelete(Execution execution, String response, String method) {
+	public void postProcessSDNCDelete(DelegateExecution execution, String response, String method) {
 
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 		utils.log("DEBUG"," ***** postProcessSDNC " + method + " *****", isDebugEnabled)
@@ -297,7 +280,7 @@ public class DoDeleteServiceInstance extends AbstractServiceTaskProcessor {
 		utils.log("DEBUG"," *** Exit postProcessSDNC " + method + " ***", isDebugEnabled)
 	}
 
-	public void postProcessAAIGET(Execution execution) {
+	public void postProcessAAIGET(DelegateExecution execution) {
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 		utils.log("DEBUG"," ***** postProcessAAIGET ***** ", isDebugEnabled)
 		String msg = ""
@@ -308,7 +291,7 @@ public class DoDeleteServiceInstance extends AbstractServiceTaskProcessor {
 			boolean foundInAAI = execution.getVariable("GENGS_FoundIndicator")
 			String serviceType = ""
 
-			if(foundInAAI == true){
+			if(foundInAAI){
 				utils.log("DEBUG","Found Service-instance in AAI", isDebugEnabled)
 
 				//Extract GlobalSubscriberId
@@ -406,10 +389,37 @@ public class DoDeleteServiceInstance extends AbstractServiceTaskProcessor {
 						}
 
 					}
+					
+					//alacarte SIs are NOT sent to sdnc. exceptions are listed in config variable
+					String svcTypes = execution.getVariable("URN_sdnc_si_svc_types") ?: ""
+					utils.log("DEBUG", "SDNC SI serviceTypes:" + svcTypes, isDebugEnabled)
+					List<String> svcList = Arrays.asList(svcTypes.split("\\s*,\\s*"));
+					boolean isSdncService= false
+					for (String listEntry : svcList){
+						if (listEntry.equalsIgnoreCase(serviceType)){
+							isSdncService = true
+							break;
+						}
+					}
+					
+					//All Macros are sent to SDNC, TRANSPORT(Macro) is sent to SDNW
+					//Alacartes are sent to SDNC if they are listed in config variable above
+					execution.setVariable("sendToSDNC", true)
+					if(execution.getVariable("sdncVersion").equals("1610")) //alacarte
+					{
+						if(!isSdncService){
+							execution.setVariable("sendToSDNC", false)
+						}
+					}
+					
+					utils.log("DEBUG", "isSdncService: " + isSdncService, isDebugEnabled)
+					utils.log("DEBUG", "Send To SDNC: " + execution.getVariable("sendToSDNC"), isDebugEnabled)
+					utils.log("DEBUG", "Service Type: " + execution.getVariable("serviceType"), isDebugEnabled)
+					
 				}
 			}else{
 				boolean succInAAI = execution.getVariable("GENGS_SuccessIndicator")
-				if(succInAAI != true){
+				if(!succInAAI){
 					utils.log("DEBUG","Error getting Service-instance from AAI", + serviceInstanceId, isDebugEnabled)
 					WorkflowException workflowException = execution.getVariable("WorkflowException")
 					utils.logAudit("workflowException: " + workflowException)
@@ -436,14 +446,14 @@ public class DoDeleteServiceInstance extends AbstractServiceTaskProcessor {
 		utils.log("DEBUG"," *** Exit postProcessAAIGET *** ", isDebugEnabled)
 	}
 
-	public void postProcessAAIDEL(Execution execution) {
+	public void postProcessAAIDEL(DelegateExecution execution) {
 		def isDebugEnabled=execution.getVariable("isDebugLogEnabled")
 		utils.log("DEBUG"," ***** postProcessAAIDEL ***** ", isDebugEnabled)
 		String msg = ""
 		try {
 			String serviceInstanceId = execution.getVariable("serviceInstanceId")
 			boolean succInAAI = execution.getVariable("GENDS_SuccessIndicator")
-			if(succInAAI != true){
+			if(!succInAAI){
 				msg = "Error deleting Service-instance in AAI" + serviceInstanceId
 				utils.log("DEBUG", msg, isDebugEnabled)
 				WorkflowException workflowException = execution.getVariable("WorkflowException")

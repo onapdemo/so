@@ -20,49 +20,23 @@
 
 package org.openecomp.mso.asdc.installer;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-
-import java.util.List;
-
+import org.onap.sdc.api.notification.IArtifactInfo;
+import org.onap.sdc.tosca.parser.api.ISdcCsarHelper;
+import org.onap.sdc.toscaparser.api.NodeTemplate;
+import org.onap.sdc.toscaparser.api.elements.Metadata;
+import org.openecomp.mso.asdc.client.exceptions.ASDCDownloadException;
 import org.openecomp.mso.asdc.util.SoSdcCsarHelper;
-import org.openecomp.sdc.api.notification.IArtifactInfo;
-import org.openecomp.sdc.api.notification.INotificationData;
-//import org.openecomp.generic.tosca.parser.model.Metadata;
-//import org.openecomp.sdc.tosca.parser.factory.SdcCsarHelperFactory;
-//import org.openecomp.sdc.tosca.parser.factory.SdcCsarHelperFactory;
-///import org.openecomp.generic.tosca.parser.model.Metadata;
-import org.openecomp.sdc.api.results.IDistributionClientDownloadResult;
-import org.openecomp.sdc.tosca.parser.api.ISdcCsarHelper;
-import org.openecomp.sdc.tosca.parser.impl.SdcCsarHelperImpl;
-import org.openecomp.sdc.tosca.parser.impl.SdcPropertyNames;
-
-
-import org.openecomp.sdc.tosca.parser.impl.SdcToscaParserFactory;
-
-
-
-import org.openecomp.sdc.toscaparser.api.NodeTemplate;
-import org.openecomp.sdc.toscaparser.api.elements.Metadata;
-
-import org.openecomp.mso.db.catalog.beans.AllottedResource;
-import org.openecomp.mso.db.catalog.beans.AllottedResourceCustomization;
-import org.openecomp.mso.db.catalog.beans.NetworkResource;
-import org.openecomp.mso.db.catalog.beans.NetworkResourceCustomization;
-import org.openecomp.mso.db.catalog.beans.Service;
-import org.openecomp.mso.db.catalog.beans.ServiceToResourceCustomization;
-import org.openecomp.mso.db.catalog.beans.TempNetworkHeatTemplateLookup;
-import org.openecomp.mso.db.catalog.beans.ToscaCsar;
-import org.openecomp.mso.db.catalog.beans.VfModule;
-import org.openecomp.mso.db.catalog.beans.VfModuleCustomization;
-import org.openecomp.mso.db.catalog.beans.VfModuleToHeatFiles;
-import org.openecomp.mso.db.catalog.beans.VnfResCustomToVfModuleCustom;
-import org.openecomp.mso.db.catalog.beans.VnfResource;
-import org.openecomp.mso.db.catalog.beans.VnfResourceCustomization;
+import org.openecomp.mso.db.catalog.beans.*;
 import org.openecomp.mso.logger.MessageEnum;
 import org.openecomp.mso.logger.MsoLogger;
+
+import java.io.File;
+import java.util.List;
+
+//import org.openecomp.generic.tosca.parser.model.Metadata;
+//import org.onap.sdc.tosca.parser.factory.SdcCsarHelperFactory;
+//import org.onap.sdc.tosca.parser.factory.SdcCsarHelperFactory;
+///import org.openecomp.generic.tosca.parser.model.Metadata;
 
 public class ToscaResourceStructure {
 	
@@ -77,13 +51,16 @@ public class ToscaResourceStructure {
 	String volHeatEnvTemplateUUID;
 	String envHeatTemplateUUID;
 	String heatFilesUUID;
+	String workloadPerformance;
 	boolean isVnfAlreadyInstalled = false;
 	String serviceVersion;
+	private boolean isDeployedSuccessfully=false;
+	
 	
 	private NetworkResourceCustomization catalogNetworkResourceCustomization;
 	
 	private NetworkResource catalogNetworkResource;
-	
+		
 	private AllottedResourceCustomization catalogResourceCustomization;
 	
 	private VfModule vfModule;
@@ -122,19 +99,18 @@ public class ToscaResourceStructure {
 	public ToscaResourceStructure(){
 	}
 	
-	public void updateResourceStructure(IArtifactInfo artifact){
+	public void updateResourceStructure(IArtifactInfo artifact) throws ASDCDownloadException {
 		
 				
 		try {
 				
 //			SdcToscaParserFactory factory = SdcToscaParserFactory.getInstance();//Autoclosable
 			
+			LOGGER.debug("MSO config path is: " + System.getProperty("mso.config.path"));
 			
 			File spoolFile = new File(System.getProperty("mso.config.path") + "ASDC/" + artifact.getArtifactName());
-			
-
-			 
-			System.out.println("PATH IS " + spoolFile.getAbsolutePath());
+ 
+			LOGGER.debug("ASDC File path is: " + spoolFile.getAbsolutePath());
 			LOGGER.info(MessageEnum.ASDC_RECEIVE_SERVICE_NOTIF, "***PATH", "ASDC", spoolFile.getAbsolutePath());
 			
 
@@ -145,12 +121,12 @@ public class ToscaResourceStructure {
 			System.out.println("System out " + e.getMessage());
 			LOGGER.error(MessageEnum.ASDC_GENERAL_EXCEPTION_ARG,
 					"Exception caught during parser *****LOOK********* " + artifact.getArtifactName(), "ASDC", "processResourceNotification", MsoLogger.ErrorCode.BusinessProcesssError, "Exception in processResourceNotification", e);
-		}	
 			
+			throw new ASDCDownloadException ("Exception caught when passing the csar file to the parser ", e);
+		}	
 
 			serviceMetadata = sdcCsarHelper.getServiceMetadata();
-
-		
+	
 	}
 	
 	public String getHeatTemplateUUID() {
@@ -409,6 +385,129 @@ public class ToscaResourceStructure {
 
 	public void setServiceVersion(String serviceVersion) {
 		this.serviceVersion = serviceVersion;
+	}
+
+	public String getWorkloadPerformance() {
+		return workloadPerformance;
+	}
+
+	public void setWorkloadPerformance(String workloadPerformance) {
+		this.workloadPerformance = workloadPerformance;
+	}
+
+	public VfModule getVfModule() {
+		return vfModule;
+	}
+
+	public void setVfModule(VfModule vfModule) {
+		this.vfModule = vfModule;
+	}
+
+	public VfModuleCustomization getVfModuleCustomization() {
+		return vfModuleCustomization;
+	}
+
+	public void setVfModuleCustomization(VfModuleCustomization vfModuleCustomization) {
+		this.vfModuleCustomization = vfModuleCustomization;
+	}
+
+	public VnfResource getVnfResource() {
+		return vnfResource;
+	}
+
+	public void setVnfResource(VnfResource vnfResource) {
+		this.vnfResource = vnfResource;
+	}
+
+	public VnfResourceCustomization getVnfResourceCustomization() {
+		return vnfResourceCustomization;
+	}
+
+	public void setVnfResourceCustomization(
+			VnfResourceCustomization vnfResourceCustomization) {
+		this.vnfResourceCustomization = vnfResourceCustomization;
+	}
+
+	public AllottedResourceCustomization getAllottedResourceCustomization() {
+		return allottedResourceCustomization;
+	}
+
+	public void setAllottedResourceCustomization(
+			AllottedResourceCustomization allottedResourceCustomization) {
+		this.allottedResourceCustomization = allottedResourceCustomization;
+	}
+
+	public VnfResCustomToVfModuleCustom getVnfResCustomToVfModuleCustom() {
+		return vnfResCustomToVfModuleCustom;
+	}
+
+	public void setVnfResCustomToVfModuleCustom(
+			VnfResCustomToVfModuleCustom vnfResCustomToVfModuleCustom) {
+		this.vnfResCustomToVfModuleCustom = vnfResCustomToVfModuleCustom;
+	}
+
+	public TempNetworkHeatTemplateLookup getTempNetworkHeatTemplateLookup() {
+		return tempNetworkHeatTemplateLookup;
+	}
+
+	public void setTempNetworkHeatTemplateLookup(
+			TempNetworkHeatTemplateLookup tempNetworkHeatTemplateLookup) {
+		this.tempNetworkHeatTemplateLookup = tempNetworkHeatTemplateLookup;
+	}
+
+	public VfModuleToHeatFiles getVfModuleToHeatFiles() {
+		return vfModuleToHeatFiles;
+	}
+
+	public void setVfModuleToHeatFiles(VfModuleToHeatFiles vfModuleToHeatFiles) {
+		this.vfModuleToHeatFiles = vfModuleToHeatFiles;
+	}
+
+	public ToscaCsar getToscaCsar() {
+		return toscaCsar;
+	}
+
+	public void setToscaCsar(ToscaCsar toscaCsar) {
+		this.toscaCsar = toscaCsar;
+	}
+
+	public ServiceToResourceCustomization getVfServiceToResourceCustomization() {
+		return vfServiceToResourceCustomization;
+	}
+
+	public void setVfServiceToResourceCustomization(
+			ServiceToResourceCustomization vfServiceToResourceCustomization) {
+		this.vfServiceToResourceCustomization = vfServiceToResourceCustomization;
+	}
+
+	public ServiceToResourceCustomization getAllottedServiceToResourceCustomization() {
+		return allottedServiceToResourceCustomization;
+	}
+
+	public void setAllottedServiceToResourceCustomization(
+			ServiceToResourceCustomization allottedServiceToResourceCustomization) {
+		this.allottedServiceToResourceCustomization = allottedServiceToResourceCustomization;
+	}
+
+	public ServiceToResourceCustomization getVlServiceToResourceCustomization() {
+		return vlServiceToResourceCustomization;
+	}
+
+	public void setVlServiceToResourceCustomization(
+			ServiceToResourceCustomization vlServiceToResourceCustomization) {
+		this.vlServiceToResourceCustomization = vlServiceToResourceCustomization;
+	}
+
+	public static MsoLogger getLogger() {
+		return LOGGER;
+	}
+	
+	public boolean isDeployedSuccessfully() {
+		return isDeployedSuccessfully;
+	}
+
+	public void setSuccessfulDeployment() {
+		isDeployedSuccessfully = true;
 	}
 
 }

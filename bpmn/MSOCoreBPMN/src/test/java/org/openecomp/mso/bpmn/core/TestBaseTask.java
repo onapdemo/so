@@ -35,6 +35,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.openecomp.mso.bpmn.core.utils.CamundaDBSetup;
 import org.openecomp.mso.logger.MsoLogger;
 
 /**
@@ -54,11 +55,11 @@ public class TestBaseTask {
 	@Test
 	@Deployment(resources={"BaseTaskTest.bpmn"})
 	public void shouldInvokeService() {
-		Map<String, Object> variables = new HashMap<String, Object>();
+		Map<String, Object> variables = new HashMap<>();
 		variables.put("firstName", "Jane");
 		variables.put("lastName", "Doe");
-		variables.put("age", (Integer)25);
-		variables.put("lastVisit", (Long)1438270117000L);
+		variables.put("age", 25);
+		variables.put("lastVisit", 1438270117000L);
 
 		RuntimeService runtimeService = processEngineRule.getRuntimeService();
 		assertNotNull(runtimeService);

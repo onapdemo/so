@@ -25,8 +25,7 @@ import java.io.Serializable;
 
 public class NetworkRecipe extends Recipe implements Serializable {
 	private static final long serialVersionUID = 768026109321305392L;
-	private String modelName;
-	private String networkParamXSD;
+	private String modelName = null;
 	public NetworkRecipe() {}
 
 	public String getModelName() {
@@ -36,19 +35,8 @@ public class NetworkRecipe extends Recipe implements Serializable {
 		this.modelName = modelName;
 	}
 
-	public String getNetworkParamXSD() {
-		return networkParamXSD;
-	}
-	public void setNetworkParamXSD(String networkParamXSD) {
-		this.networkParamXSD = networkParamXSD;
-	}
-	
 	@Override
 	public String toString () {
-		StringBuilder sb = new StringBuilder();
-		sb.append(super.toString());
-		sb.append (",modelName=" + modelName);
-		sb.append (",networkParamXSD=" + networkParamXSD);
-		return sb.toString();
+		return super.toString() + ",modelName=" + modelName + ",networkParamXSD=" + getParamXSD();
 	}
 }

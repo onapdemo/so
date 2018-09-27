@@ -38,7 +38,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.openecomp.mso.asdc.client.ASDCConfiguration;
 import org.openecomp.mso.asdc.client.exceptions.ArtifactInstallerException;
-import org.openecomp.mso.asdc.client.tests.ASDCControllerTest;
+import org.openecomp.mso.asdc.client.ASDCControllerTest;
 import org.openecomp.mso.asdc.installer.VfResourceStructure;
 import org.openecomp.mso.asdc.installer.heat.VfResourceInstaller;
 import org.openecomp.mso.db.catalog.CatalogDatabase;
@@ -51,13 +51,13 @@ import org.openecomp.mso.db.catalog.beans.VnfResource;
 import org.openecomp.mso.properties.MsoJavaProperties;
 import org.openecomp.mso.properties.MsoPropertiesException;
 import org.openecomp.mso.properties.MsoPropertiesFactory;
-import org.openecomp.sdc.api.IDistributionClient;
-import org.openecomp.sdc.api.notification.IArtifactInfo;
-import org.openecomp.sdc.api.notification.INotificationData;
-import org.openecomp.sdc.api.notification.IResourceInstance;
-import org.openecomp.sdc.api.results.IDistributionClientDownloadResult;
-import org.openecomp.sdc.api.results.IDistributionClientResult;
-import org.openecomp.sdc.utils.DistributionActionResultEnum;
+import org.onap.sdc.api.IDistributionClient;
+import org.onap.sdc.api.notification.IArtifactInfo;
+import org.onap.sdc.api.notification.INotificationData;
+import org.onap.sdc.api.notification.IResourceInstance;
+import org.onap.sdc.api.results.IDistributionClientDownloadResult;
+import org.onap.sdc.api.results.IDistributionClientResult;
+import org.onap.sdc.utils.DistributionActionResultEnum;
 
 import mockit.Mock;
 import mockit.MockUp;
@@ -121,7 +121,7 @@ public class VfResourceInstallerTest {
 		distributionClient = Mockito.mock(IDistributionClient.class);
 
 		// Now provision the NotificationData mock
-		List<IArtifactInfo> listArtifact = new ArrayList<IArtifactInfo>();
+		List<IArtifactInfo> listArtifact = new ArrayList<>();
 		listArtifact.add(artifactInfo1);
 
 		// Create fake resource Instance

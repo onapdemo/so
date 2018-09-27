@@ -91,9 +91,13 @@ public class VfModuleModelNames {
      */
     public List<VfModuleModelName> getVfModuleModelName() {
         if (vfModuleModelName == null) {
-            vfModuleModelName = new ArrayList<VfModuleModelName>();
+            vfModuleModelName = new ArrayList<>();
         }
         return this.vfModuleModelName;
+    }
+    
+    public void setVfModuleModelName(List<VfModuleModelName> vfModuleModelName) {
+       this.vfModuleModelName=vfModuleModelName;
     }
 
 }

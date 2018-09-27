@@ -91,9 +91,13 @@ public class VnfRequests {
      */
     public List<VnfRequest> getVnfRequest() {
         if (vnfRequest == null) {
-            vnfRequest = new ArrayList<VnfRequest>();
+            vnfRequest = new ArrayList<>();
         }
         return this.vnfRequest;
+    }
+    
+    public void setVnfRequest(List<VnfRequest> vnfRequest) {
+    	this.vnfRequest=vnfRequest;
     }
 
 }

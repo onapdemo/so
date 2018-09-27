@@ -20,134 +20,182 @@
 
 package org.openecomp.mso.client.appc;
 
-import java.beans.BeanInfo;
-
-import java.util.Map;
-
-import org.openecomp.mso.bpmn.core.PropertyConfiguration;
-
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.onap.appc.client.lcm.api.AppcClientServiceFactoryProvider;
+import org.onap.appc.client.lcm.api.AppcLifeCycleManagerServiceFactory;
+import org.onap.appc.client.lcm.api.ApplicationContext;
+import org.onap.appc.client.lcm.api.LifeCycleManagerStateful;
+import org.onap.appc.client.lcm.exceptions.AppcClientException;
+import org.onap.appc.client.lcm.model.Action;
+import org.onap.appc.client.lcm.model.ActionIdentifiers;
+import org.onap.appc.client.lcm.model.CommonHeader;
+import org.onap.appc.client.lcm.model.Flags;
+import org.onap.appc.client.lcm.model.Flags.Force;
+import org.onap.appc.client.lcm.model.Flags.Mode;
+import org.onap.appc.client.lcm.model.Payload;
+import org.onap.appc.client.lcm.model.Status;
+import org.onap.appc.client.lcm.model.ZULU;
+import org.openecomp.mso.bpmn.core.PropertyConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.openecomp.appc.client.lcm.api.AppcClientServiceFactoryProvider;
-import org.openecomp.appc.client.lcm.api.AppcLifeCycleManagerServiceFactory;
-import org.openecomp.appc.client.lcm.api.ApplicationContext;
-import org.openecomp.appc.client.lcm.api.LifeCycleManagerStateful;
-import org.openecomp.appc.client.lcm.api.ResponseHandler;
-import org.openecomp.appc.client.lcm.exceptions.AppcClientException;
-import org.openecomp.appc.client.lcm.model.Action;
-import org.openecomp.appc.client.lcm.model.ActionIdentifiers;
-import org.openecomp.appc.client.lcm.model.AuditOutput;
-import org.openecomp.appc.client.lcm.model.CommonHeader;
-import org.openecomp.appc.client.lcm.model.Flags;
-import org.openecomp.appc.client.lcm.model.Flags.Force;
-import org.openecomp.appc.client.lcm.model.Flags.Mode;
-import org.openecomp.appc.client.lcm.model.Payload;
-import org.openecomp.appc.client.lcm.model.Status;
-import org.openecomp.appc.client.lcm.model.ZULU;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import org.openecomp.mso.logger.MsoLogger;
+import com.att.eelf.configuration.EELFLogger;
+import com.att.eelf.configuration.EELFLogger.Level;
+import com.att.eelf.configuration.EELFManager;
 
 public class ApplicationControllerClient {
+	
+	public static final String DEFAULT_CONTROLLER_TYPE = "appc";
 
-    private static final MsoLogger LOGGER = MsoLogger.getMsoLogger (MsoLogger.Catalog.RA);
-    
-	private static final int PARTIAL_SERIES = 500;
+	private static final String CLIENT_NAME = "MSO";
 
-	private final String apiVer = "2.00";
-	private final String originatorId = "MSO";
-	private final int flagsTTL = 65000;
-	private final static String clientName = "MSO";
+	private static final String API_VER = "2.00";
+	private static final String ORIGINATOR_ID = "MSO";
+	private static final int FLAGS_TTL = 65000;
+	protected final EELFLogger auditLogger = EELFManager.getInstance().getAuditLogger();
 
 	@Autowired
 	public ApplicationControllerSupport appCSupport;
 
-	private LifeCycleManagerStateful client;
+	// APPC gave us an API where the controllerType is configured in the
+	// client object, which is not what we asked for. We asked for an API
+	// in which the client would have additional methods that could take
+	// the controllerType as a parameter, so that we would not need to
+	// maintain multiple client objects.  This map should be removed when
+	// the (hopefully short-term) controllerType becomes obsolete.
 
-	public Status runCommand(Action action, ActionIdentifiers identifier, Flags flags, Payload payload,
-			String requestID) throws Exception {
-		Object requestObject = createRequest(action, identifier, flags, payload, requestID);
-		client = getAppCClient();
-		Method lcmMethod = appCSupport.getAPIMethod(action.name(), client, false);
+	private final String controllerType;
+
+	private static ConcurrentHashMap<String, LifeCycleManagerStateful> appCClients = new ConcurrentHashMap<>();
+
+	/**
+	 * Creates an ApplicationControllerClient for communication with APP-C.
+	 */
+	public ApplicationControllerClient() {
+		this(DEFAULT_CONTROLLER_TYPE);
+	}
+	
+	/**
+	 * Creates an ApplicationControllerClient for the specified controller type.
+	 * @param controllerType the controller type: "appc" or "sdnc".
+	 */
+	public ApplicationControllerClient(String controllerType) {
+		if (controllerType == null) {
+			controllerType = DEFAULT_CONTROLLER_TYPE;
+		}
+		this.controllerType = controllerType;
+		appCSupport = new ApplicationControllerSupport();
+	}
+	
+	/**
+	 * Gets the controller type.
+	 * @return the controllertype
+	 */
+	public String getControllerType() {
+		return controllerType;
+	}
+
+	/**
+	 * Returns the AppC client object associated with this ApplicationControllerClient.
+	 * AppC client objects are shared objects.  One is created if it does not exist.
+	 * @return the client object, or null if creation failed
+	 */
+	public LifeCycleManagerStateful getAppCClient() {
+		return appCClients.computeIfAbsent(controllerType, k -> createAppCClient(k));
+	}
+
+	protected LifeCycleManagerStateful createAppCClient(String controllerType) {
+		try {
+			if (controllerType == null) {
+				controllerType = DEFAULT_CONTROLLER_TYPE;
+			}
+			return AppcClientServiceFactoryProvider.getFactory(AppcLifeCycleManagerServiceFactory.class)
+					.createLifeCycleManagerStateful(new ApplicationContext(), getLCMProperties(controllerType));
+		} catch (AppcClientException e) {
+			auditLogger.log(Level.ERROR, "Error in getting LifeCycleManagerStateful: ", e, e.getMessage());
+			// This null value will cause NullPointerException when used later.
+			// Error handling could certainly be improved here.
+			return null;
+		}
+	}
+
+	public Status runCommand(Action action, org.onap.appc.client.lcm.model.ActionIdentifiers actionIdentifiers,
+			org.onap.appc.client.lcm.model.Payload payload, String requestID)
+			throws ApplicationControllerOrchestratorException {
+		Object requestObject = createRequest(action, actionIdentifiers, payload, requestID);
 		appCSupport.logLCMMessage(requestObject);
-		Object response = lcmMethod.invoke(client, requestObject);
-		return appCSupport.getStatusFromGenericResponse(response);
+		LifeCycleManagerStateful client = getAppCClient();
+		Method lcmMethod = appCSupport.getAPIMethod(action.name(), client, false);
+		try {
+			Object response = lcmMethod.invoke(client, requestObject);
+			return appCSupport.getStatusFromGenericResponse(response);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			throw new RuntimeException(String.format("%s : %s", "Unable to invoke action", action.toString()), e);
+		}
 	}
 
-	public void shutdownclient() {
-		AppcClientServiceFactoryProvider.getFactory(AppcLifeCycleManagerServiceFactory.class)
-				.shutdownLifeCycleManager(false);
+	protected Properties getLCMProperties() {
+		return getLCMProperties("appc");
 	}
-
-	public LifeCycleManagerStateful getAppCClient() throws AppcClientException {
-		if (client == null)
-			client = AppcClientServiceFactoryProvider.getFactory(AppcLifeCycleManagerServiceFactory.class)
-					.createLifeCycleManagerStateful(new ApplicationContext(), getLCMProperties());
-		return client;
-	}
-
-	private Properties getLCMProperties() {
-		return getLCMPropertiesHelper();
-	}
-
-	protected Properties getLCMPropertiesHelper() {
+	
+	protected Properties getLCMProperties(String controllerType) {
 		Properties properties = new Properties();
 		Map<String, String> globalProperties = PropertyConfiguration.getInstance()
 				.getProperties("mso.bpmn.urn.properties");
-
-		properties.put("topic.read", globalProperties.get("appc.topic.read"));
-		properties.put("topic.read.timeout", globalProperties.get("appc.topic.read.timeout"));
+		
+		properties.put("topic.read", globalProperties.get("appc.client.topic.read"));
+		properties.put("topic.write", globalProperties.get("appc.client.topic.write"));
+		properties.put("SDNC-topic.read", globalProperties.get("appc.client.topic.sdnc.read"));
+		properties.put("SDNC-topic.write", globalProperties.get("appc.client.topic.sdnc.write"));
+		properties.put("topic.read.timeout", globalProperties.get("appc.client.topic.read.timeout"));
 		properties.put("client.response.timeout", globalProperties.get("appc.client.response.timeout"));
-		properties.put("topic.write", globalProperties.get("appc.topic.write"));
-		properties.put("poolMembers", globalProperties.get("appc.pool.members"));
+		properties.put("poolMembers", globalProperties.get("appc.client.poolMembers"));
+		properties.put("controllerType", controllerType);
 		properties.put("client.key", globalProperties.get("appc.client.key"));
 		properties.put("client.secret", globalProperties.get("appc.client.secret"));
-		properties.put("client.name", clientName);
+		properties.put("client.name", CLIENT_NAME);
+		properties.put("service", globalProperties.get("appc.client.service"));
 		return properties;
 	}
 
-	public Object createRequest(Action action, ActionIdentifiers identifier, Flags flags, Payload payload,
-			String requestId) throws Exception {
+	public Object createRequest(Action action, ActionIdentifiers identifier, Payload payload, String requestId) {
 		Object requestObject = appCSupport.getInput(action.name());
 		try {
-			org.openecomp.appc.client.lcm.model.CommonHeader commonHeader = buildCommonHeader(requestId);
+			CommonHeader commonHeader = buildCommonHeader(requestId);
 			requestObject.getClass().getDeclaredMethod("setCommonHeader", CommonHeader.class).invoke(requestObject,
 					commonHeader);
 			requestObject.getClass().getDeclaredMethod("setAction", Action.class).invoke(requestObject, action);
 			requestObject.getClass().getDeclaredMethod("setActionIdentifiers", ActionIdentifiers.class)
 					.invoke(requestObject, identifier);
+			if (payload != null) {
+				requestObject.getClass().getDeclaredMethod("setPayload", Payload.class).invoke(requestObject, payload);
+			}
 		} catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-		    LOGGER.debug("Exception:", e);
-			throw new Exception("Error Building AppC Request: " + e.getMessage());
+			auditLogger.log(Level.ERROR, "Error building Appc request: ", e, e.getMessage());
 		}
 		return requestObject;
 	}
 
-	private org.openecomp.appc.client.lcm.model.CommonHeader buildCommonHeader(String requestId) {
-		org.openecomp.appc.client.lcm.model.CommonHeader commonHeader = new org.openecomp.appc.client.lcm.model.CommonHeader();
-		commonHeader.setApiVer(apiVer);
-		commonHeader.setOriginatorId(originatorId);
+	private CommonHeader buildCommonHeader(String requestId) {
+		CommonHeader commonHeader = new CommonHeader();
+		commonHeader.setApiVer(API_VER);
+		commonHeader.setOriginatorId(ORIGINATOR_ID);
 		commonHeader.setRequestId(requestId == null ? UUID.randomUUID().toString() : requestId);
 		commonHeader.setSubRequestId(requestId);
-		org.openecomp.appc.client.lcm.model.Flags flags = new org.openecomp.appc.client.lcm.model.Flags();
+		Flags flags = new Flags();
 		String flagsMode = "NORMAL";
 		Mode mode = Mode.valueOf(flagsMode);
 		flags.setMode(mode);
 		String flagsForce = "FALSE";
 		Force force = Force.valueOf(flagsForce);
 		flags.setForce(force);
-		flags.setTtl(flagsTTL);
+		flags.setTtl(FLAGS_TTL);
 		commonHeader.setFlags(flags);
 		Instant timestamp = Instant.now();
 		ZULU zulu = new ZULU(timestamp.toString());

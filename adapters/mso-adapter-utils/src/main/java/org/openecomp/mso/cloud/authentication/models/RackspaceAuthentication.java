@@ -23,25 +23,16 @@
 
 package org.openecomp.mso.cloud.authentication.models;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonRootName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import com.woorea.openstack.keystone.model.Authentication;
 
 @JsonRootName("auth")
 public class RackspaceAuthentication extends Authentication {
 		
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 5451283386875662918L;
 
-	@JsonIgnore
-	private String tenantId;
-	
-	@JsonIgnore
-	private String tenantName;
-	
 	public static final class Token {
 		
 		private String username;

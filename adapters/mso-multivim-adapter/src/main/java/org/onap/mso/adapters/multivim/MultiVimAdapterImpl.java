@@ -53,7 +53,7 @@ public class MultiVimAdapterImpl implements MultiVimAdapter {
     }
 
     @Override
-    public void createVfModule(CloudType cloudType, String vnfId, String vnfModelName, String vfModuleName, String multicloudName, String toscaCsarArtifactUuid,
+    public void createVfModule(CloudType cloudType, String vnfId, String vfModuleModelName, String vfModuleName, String multicloudName, String toscaCsarArtifactUuid,
                                String inputs, Boolean isSync, Holder<String> vfModuleStackId,
                                Holder<Map<String, String>> outputs, Holder<Boolean> vfModuleCreated) throws Exception {
 
@@ -73,7 +73,7 @@ public class MultiVimAdapterImpl implements MultiVimAdapter {
         File csarFile = null;
         File inputFile = null;
         try {
-            csarFile = getInnerCsarFile(csarPath, vfModuleName, vnfModelName);
+            csarFile = getInnerCsarFile(csarPath, vfModuleName, vfModuleModelName);
             inputFile = dumpInputs(mappedInputs, vfModuleName + "_input_values.json");
 
             final String msbEndpointUrl = msoJavaProperties.getProperty(MSB_ENDPOINT_URL, null);
@@ -119,8 +119,12 @@ public class MultiVimAdapterImpl implements MultiVimAdapter {
                     throw new RESTException(msg);
                 }
             } else {
-                final String msg = "failed: " + restResponse.getResponseBodyAsString();
-                throw new RESTException(msg);
+                if (restResponse.getStatusCode() == 502) {
+                    // Supressing 502 gateway error as this is due to timeout but the stack is created in Azure
+                } else {
+                    final String msg = "failed: " + restResponse.getResponseBodyAsString();
+                    throw new RESTException(msg);
+                }
             }
         } catch (Exception e) {
             LOGGER.error(MessageEnum.RA_CREATE_VNF_ERR, "", "createVfModule",
@@ -158,42 +162,35 @@ public class MultiVimAdapterImpl implements MultiVimAdapter {
         final int createPollInterval = msoJavaProperties.getIntProperty(POLL_INTERVAL, CREATE_POLL_INTERVAL_DEFAULT);
         final int timeoutMinutes = msoJavaProperties.getIntProperty(POLL_TIMEOUT, TIMEOUT_MINUTES_DEFAULT);
         LOGGER.debug("createPollInterval : " + createPollInterval);
-        boolean createTimedOut = false;
         int pollTimeout = (timeoutMinutes * 60) + createPollInterval;
         LOGGER.debug("pollTimeout : " + pollTimeout);
-        while (true) {
-            Map<String, String> getStack = parseResponse(getStack(executionId, multicloudName));
+        while (pollTimeout > 0) {
+            try {
+                Thread.sleep(createPollInterval * 1000L);
+            } catch (InterruptedException ignored) {
+            }
+
+            final Map<String, String> getStack = parseResponse(getStack(executionId, multicloudName));
             if ("started".equals(getStack.get("status"))) {
                 // VM creation is still running.
                 // Sleep and try again unless timeout has been reached
-                if (pollTimeout <= 0) {
-                    // Note that this should not occur, since there is a timeout specified
-                    createTimedOut = true;
-                    break;
-                }
-                try {
-                    Thread.sleep(createPollInterval * 1000L);
-                } catch (InterruptedException ignored) {
-                }
-
                 pollTimeout -= createPollInterval;
             } else if ("succeeded".equals(getStack.get("status"))) {
                 LOGGER.debug("Received Success response");
                 outputs.value = getStack;
                 vfModuleStackId.value = executionId;
                 vfModuleCreated.value = true;
-                break;
+                return;
             } else {
                 final String msg = "failed: VM creation status: " + getStack.get("status");
                 LOGGER.debug(msg);
                 throw new RESTException(msg);
             }
         }
-        if (createTimedOut) {
-            final String msg = "failed: VM creation status: Timedout";
-            LOGGER.debug(msg);
-            throw new RESTException(msg);
-        }
+        // Poll Timedout
+        final String msg = "failed: VM creation status: Timedout";
+        LOGGER.debug(msg);
+        throw new RESTException(msg);
     }
 
     private File dumpInputs(String inputs, String name) throws IOException {
@@ -219,14 +216,14 @@ public class MultiVimAdapterImpl implements MultiVimAdapter {
         }
     }
 
-    private File getInnerCsarFile(Path csarPath, String vfModuleName, String vnfModelName) throws Exception {
+    private File getInnerCsarFile(Path csarPath, String vfModuleName, String vfModuleModelName) throws Exception {
         final File file = new File(CSAR_DIR + vfModuleName + ".csar");
         try (ZipFile zipFile = new ZipFile(csarPath.toFile())) {
             final Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements()) {
                 final ZipEntry entry = entries.nextElement();
                 //TODO - check for actual logic to find corect csar from parent csar.
-                if (entry.getName().endsWith(".csar") && entry.getName().toLowerCase().contains(normalizeName(vnfModelName))) {
+                if (entry.getName().endsWith(".csar") && entry.getName().toLowerCase().contains(normalizeVfModuleModelName(vfModuleModelName))) {
                     final InputStream csar = zipFile.getInputStream(entry);
                     FileUtils.copyInputStreamToFile(csar, file);
                 }
@@ -244,6 +241,10 @@ public class MultiVimAdapterImpl implements MultiVimAdapter {
         str = DOT_PATTERN.matcher(str).replaceAll("");
         str = str.toLowerCase();
         return str;
+    }
+
+    private String normalizeVfModuleModelName(String strIn) {
+        return strIn.split("\\.\\.")[1];
     }
 
     private Path getCsarPath(String toscaCsarArtifactUuid) {

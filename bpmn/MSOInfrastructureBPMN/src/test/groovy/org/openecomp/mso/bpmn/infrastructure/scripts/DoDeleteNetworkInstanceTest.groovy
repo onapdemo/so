@@ -10,7 +10,7 @@ import org.camunda.bpm.engine.ProcessEngineServices
 import org.camunda.bpm.engine.RepositoryService
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity
 import org.camunda.bpm.engine.repository.ProcessDefinition
-import org.camunda.bpm.engine.runtime.Execution
+import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -1225,7 +1225,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 
 		}
 		
-		public void initializeVariables (Execution mockExecution) {
+		public void initializeVariables (DelegateExecution mockExecution) {
 
 			verify(mockExecution).setVariable(Prefix + "networkRequest", "")
 			verify(mockExecution).setVariable(Prefix + "isSilentSuccess", false)
@@ -1302,7 +1302,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			when(mockExecution.getVariable("URN_mso_rollback")).thenReturn("true")
 			when(mockExecution.getVariable("sdncVersion")).thenReturn("1610")
 
-			// preProcessRequest(Execution execution)
+			// preProcessRequest(DelegateExecution execution)
 			DoDeleteNetworkInstance DoDeleteNetworkInstance = new DoDeleteNetworkInstance()
 			try {
 				DoDeleteNetworkInstance.preProcessRequest(mockExecution)
@@ -1367,7 +1367,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			when(mockExecution.getVariable("URN_mso_rollback")).thenReturn("true")
 			when(mockExecution.getVariable("sdncVersion")).thenReturn("1610")
 
-			// preProcessRequest(Execution execution)
+			// preProcessRequest(DelegateExecution execution)
 			DoDeleteNetworkInstance DoDeleteNetworkInstance = new DoDeleteNetworkInstance()
 			DoDeleteNetworkInstance.preProcessRequest(mockExecution)
 
@@ -1547,7 +1547,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			when(mockExecution.getVariable("GENGSI_siResourceLink")).thenReturn(null)
 			when(mockExecution.getVariable(Prefix + "deactivateSDNCResponse")).thenReturn(sdncAdapterWorkflowFormattedResponse)
 
-			// preProcessRequest(Execution execution)
+			// preProcessRequest(DelegateExecution execution)
 			DoDeleteNetworkInstance DoDeleteNetworkInstance = new DoDeleteNetworkInstance()
 			DoDeleteNetworkInstance.prepareRpcSDNCDeactivateRollback(mockExecution)
 
@@ -1568,7 +1568,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			println "************ callRESTQueryAAI ************* "
 
 			WireMock.reset();
-			MockGetNetworkByIdWithDepth("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_Success.xml", "1");
+			MockGetNetworkByIdWithDepth("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_Success.xml", "all");
 
 			ExecutionEntity mockExecution = setupMock()
 			when(mockExecution.getVariable(Prefix + "networkInputs")).thenReturn(expectedNetworkRequest)
@@ -1586,7 +1586,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			DoDeleteNetworkInstance.callRESTQueryAAI(mockExecution)
 
 			verify(mockExecution).setVariable("prefix", Prefix)
-			verify(mockExecution).setVariable(Prefix + "queryAAIRequest", "http://localhost:8090/aai/v9/network/l3-networks/l3-network/bdc5efe8-404a-409b-85f6-0dcc9eebae30"+"?depth=1")
+			verify(mockExecution).setVariable(Prefix + "queryAAIRequest", "http://localhost:8090/aai/v9/network/l3-networks/l3-network/bdc5efe8-404a-409b-85f6-0dcc9eebae30"+"?depth=all")
 
 			verify(mockExecution).setVariable(Prefix + "aaiReturnCode", "200")
 			//verify(mockExecution).setVariable(Prefix + "queryAAIResponse", aaiResponse)
@@ -1602,7 +1602,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			println "************ callRESTQueryAAI ************* "
 
 			WireMock.reset();
-			MockGetNetworkByIdWithDepth("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_withRelationship_Success.xml", "1");
+			MockGetNetworkByIdWithDepth("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_withRelationship_Success.xml", "all");
 
 			ExecutionEntity mockExecution = setupMock()
 			when(mockExecution.getVariable(Prefix + "networkInputs")).thenReturn(expectedNetworkRequest)
@@ -1620,7 +1620,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			DoDeleteNetworkInstance.callRESTQueryAAI(mockExecution)
 
 			verify(mockExecution, atLeast(1)).setVariable("prefix", Prefix)
-			verify(mockExecution).setVariable(Prefix + "queryAAIRequest", "http://localhost:8090/aai/v9/network/l3-networks/l3-network/bdc5efe8-404a-409b-85f6-0dcc9eebae30"+"?depth=1")
+			verify(mockExecution).setVariable(Prefix + "queryAAIRequest", "http://localhost:8090/aai/v9/network/l3-networks/l3-network/bdc5efe8-404a-409b-85f6-0dcc9eebae30"+"?depth=all")
 
 			verify(mockExecution).setVariable(Prefix + "aaiReturnCode", "200")
 			//verify(mockExecution).setVariable(Prefix + "queryAAIResponse", aaiResponseWithRelationship)
@@ -1636,7 +1636,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			println "************ callRESTQueryAAI ************* "
 
 			WireMock.reset();
-			MockGetNetworkByIdWithDepth("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_Success.xml", "1");
+			MockGetNetworkByIdWithDepth("bdc5efe8-404a-409b-85f6-0dcc9eebae30", "DeleteNetworkV2/deleteNetworkAAIResponse_Success.xml", "all");
 
 			ExecutionEntity mockExecution = setupMock()
 			when(mockExecution.getVariable(Prefix + "networkInputs")).thenReturn(expectedNetworkRequest)
@@ -1654,7 +1654,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			DoDeleteNetworkInstance.callRESTQueryAAI(mockExecution)
 
 			verify(mockExecution).setVariable("prefix", Prefix)
-			verify(mockExecution).setVariable(Prefix + "queryAAIRequest", "http://localhost:8090/aai/v9/network/l3-networks/l3-network/bdc5efe8-404a-409b-85f6-0dcc9eebae30"+ "?depth=1")
+			verify(mockExecution).setVariable(Prefix + "queryAAIRequest", "http://localhost:8090/aai/v9/network/l3-networks/l3-network/bdc5efe8-404a-409b-85f6-0dcc9eebae30"+ "?depth=all")
 
 			verify(mockExecution).setVariable(Prefix + "aaiReturnCode", "200")
 			//verify(mockExecution).setVariable(Prefix + "queryAAIResponse", aaiResponse)
@@ -1715,7 +1715,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			when(mockExecution.getVariable("URN_mso_msoKey")).thenReturn("07a7159d3bf51a0e53be7a8f89699be7")
 			when(mockExecution.getVariable("URN_aai_auth")).thenReturn("757A94191D685FD2092AC1490730A4FC")
 
-			// preProcessRequest(Execution execution)
+			// preProcessRequest(DelegateExecution execution)
 			DoDeleteNetworkInstance DoDeleteNetworkInstance = new DoDeleteNetworkInstance()
 			DoDeleteNetworkInstance.callRESTQueryAAICloudRegion(mockExecution)
 
@@ -1748,7 +1748,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			when(mockExecution.getVariable("URN_mso_msoKey")).thenReturn("07a7159d3bf51a0e53be7a8f89699be7")
 			when(mockExecution.getVariable("URN_aai_auth")).thenReturn("757A94191D685FD2092AC1490730A4FC")
 
-			// preProcessRequest(Execution execution)
+			// preProcessRequest(DelegateExecution execution)
 			DoDeleteNetworkInstance DoDeleteNetworkInstance = new DoDeleteNetworkInstance()
 			DoDeleteNetworkInstance.callRESTQueryAAICloudRegion(mockExecution)
 
@@ -1864,7 +1864,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			when(mockExecution.getVariable(Prefix + "source")).thenReturn("PORTAL")
 			when(mockExecution.getVariable(Prefix + "isException")).thenReturn(false)
 
-			// postProcessResponse(Execution execution)
+			// postProcessResponse(DelegateExecution execution)
 			DoDeleteNetworkInstance DoDeleteNetworkInstance = new DoDeleteNetworkInstance()
 			DoDeleteNetworkInstance.postProcessResponse(mockExecution)
 
@@ -1892,7 +1892,7 @@ String sdncAdapterWorkflowFormattedResponse_404 =
 			when(mockExecution.getVariable(Prefix + "rollbackDeactivateSDNCRequest")).thenReturn(sdncAdapaterDeactivateRollback)
 			when(mockExecution.getVariable("WorkflowException")).thenReturn(workflowException)
 
-			// preProcessRequest(Execution execution)
+			// preProcessRequest(DelegateExecution execution)
 			DoDeleteNetworkInstance DoDeleteNetworkInstance = new DoDeleteNetworkInstance()
 			DoDeleteNetworkInstance.prepareRollbackData(mockExecution)
 

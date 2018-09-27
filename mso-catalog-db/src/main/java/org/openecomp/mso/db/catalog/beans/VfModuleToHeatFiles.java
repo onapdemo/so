@@ -26,8 +26,8 @@ import java.io.Serializable;
 
 public class VfModuleToHeatFiles implements Serializable {
 	
-    private String vfModuleModelUuid;
-    private String heatFilesArtifactUuid;
+    private String vfModuleModelUuid = null;
+    private String heatFilesArtifactUuid = null;
     public static final long serialVersionUID = -1322322139926390329L;
 
 	public VfModuleToHeatFiles() {
@@ -46,13 +46,10 @@ public class VfModuleToHeatFiles implements Serializable {
 	public void setHeatFilesArtifactUuid(String heatFilesArtifactUuid) {
 		this.heatFilesArtifactUuid = heatFilesArtifactUuid;
 	}
-	
-    @Override
-    public String toString () {
-        StringBuilder sb = new StringBuilder ();
-        sb.append ("vfModuleModelUuid=" + this.vfModuleModelUuid);
-        sb.append (", heatFilesArtifactUuid=" + this.heatFilesArtifactUuid);
-        return sb.toString ();
-    }
+
+	@Override
+	public String toString() {
+		return "vfModuleModelUuid=" + this.vfModuleModelUuid + ", heatFilesArtifactUuid=" + this.heatFilesArtifactUuid;
+	}
 
 }

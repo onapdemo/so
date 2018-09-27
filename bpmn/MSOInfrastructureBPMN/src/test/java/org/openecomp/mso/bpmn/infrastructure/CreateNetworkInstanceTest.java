@@ -88,13 +88,13 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 		MockNetworkAdapterPost("CreateNetworkV2/createNetworkResponse_Success.xml", "createNetworkRequest");
 		MockGetNetworkByName("MNS-25180-L-01-dmz_direct_net_1", "CreateNetworkV2/createNetwork_queryName_AAIResponse_Success.xml");
 		MockGetNetworkCloudRegion("CreateNetworkV2/cloudRegion25_AAIResponse_Success.xml", "RDM2WAGPLCP");
-		MockGetNetworkByIdWithDepth("49c86598-f766-46f8-84f8-8d1c1b10f9b4", "CreateNetworkV2/createNetwork_queryNetworkId_AAIResponse_Success.xml", "1");
+		MockGetNetworkByIdWithDepth("49c86598-f766-46f8-84f8-8d1c1b10f9b4", "CreateNetworkV2/createNetwork_queryNetworkId_AAIResponse_Success.xml", "all");
 		MockGetNetworkVpnBinding("CreateNetworkV2/createNetwork_queryVpnBinding_AAIResponse_Success.xml", "85f015d0-2e32-4c30-96d2-87a1a27f8017");
 		MockGetNetworkVpnBinding("CreateNetworkV2/createNetwork_queryVpnBinding_AAIResponse_Success.xml", "c980a6ef-3b88-49f0-9751-dbad8608d0a6");
 		MockGetNetworkPolicy("CreateNetworkV2/createNetwork_queryNetworkPolicy_AAIResponse_Success.xml", "cee6d136-e378-4678-a024-2cd15f0ee0cg");
 		MockGetNetworkTableReference("CreateNetworkV2/createNetwork_queryNetworkTableRef1_AAIResponse_Success.xml", "refFQDN1");
 		MockGetNetworkTableReference("CreateNetworkV2/createNetwork_queryNetworkTableRef2_AAIResponse_Success.xml", "refFQDN2");
-		MockPutNetworkIdWithDepth("CreateNetworkV2/createNetwork_updateContrail_AAIResponse_Success.xml", "49c86598-f766-46f8-84f8-8d1c1b10f9b4", "1");
+		MockPutNetworkIdWithDepth("CreateNetworkV2/createNetwork_updateContrail_AAIResponse_Success.xml", "49c86598-f766-46f8-84f8-8d1c1b10f9b4", "all");
 		MockUpdateRequestDB("DBUpdateResponse.xml");
 		//MockNodeQueryServiceInstanceById("f70e927b-6087-4974-9ef8-c5e4d5847ca4", "CreateNetworkV2/createNetwork_queryInstance_Success.xml", "v8");
 		MockNodeQueryServiceInstanceById("f70e927b-6087-4974-9ef8-c5e4d5847ca4", "CreateNetworkV2/createNetwork_queryInstance_Success.xml");
@@ -105,7 +105,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 		System.out.println("----------------------------------------------------------");
 		System.out.println("- got workflow response -");
 		System.out.println("----------------------------------------------------------");
-		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 	    assertEquals("true", getVariable(processEngineRule, "CreateNetworkInstance", "CRENI_Success"));
 	    assertEquals("true", getVariable(processEngineRule, "DoCreateNetworkInstance", "CRENWKI_Success"));
@@ -142,13 +142,13 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 		MockNetworkAdapterPost("CreateNetworkV2/createNetworkResponse_Success.xml", "createNetworkRequest");
 		MockGetNetworkByName_404("CreateNetworkV2/createNetwork_queryName_AAIResponse_Success.xml", "myOwn_Network");
 		MockGetNetworkCloudRegion("CreateNetworkV2/cloudRegion25_AAIResponse_Success.xml", "RDM2WAGPLCP");
-		MockGetNetworkByIdWithDepth("49c86598-f766-46f8-84f8-8d1c1b10f9b4", "CreateNetworkV2/createNetwork_queryNetworkId_AAIResponse_Success.xml", "1");
+		MockGetNetworkByIdWithDepth("49c86598-f766-46f8-84f8-8d1c1b10f9b4", "CreateNetworkV2/createNetwork_queryNetworkId_AAIResponse_Success.xml", "all");
 		MockGetNetworkVpnBinding("CreateNetworkV2/createNetwork_queryVpnBinding_AAIResponse_Success.xml", "85f015d0-2e32-4c30-96d2-87a1a27f8017");
 		MockGetNetworkVpnBinding("CreateNetworkV2/createNetwork_queryVpnBinding_AAIResponse_Success.xml", "c980a6ef-3b88-49f0-9751-dbad8608d0a6");
 		MockGetNetworkPolicy("CreateNetworkV2/createNetwork_queryNetworkPolicy_AAIResponse_Success.xml", "cee6d136-e378-4678-a024-2cd15f0ee0cg");
 		MockGetNetworkTableReference("CreateNetworkV2/createNetwork_queryNetworkTableRef1_AAIResponse_Success.xml", "refFQDN1");
 		MockGetNetworkTableReference("CreateNetworkV2/createNetwork_queryNetworkTableRef2_AAIResponse_Success.xml", "refFQDN2");
-		MockPutNetworkIdWithDepth("CreateNetworkV2/createNetwork_updateContrail_AAIResponse_Success.xml", "49c86598-f766-46f8-84f8-8d1c1b10f9b4", "1");
+		MockPutNetworkIdWithDepth("CreateNetworkV2/createNetwork_updateContrail_AAIResponse_Success.xml", "49c86598-f766-46f8-84f8-8d1c1b10f9b4", "all");
 		MockUpdateRequestDB("DBUpdateResponse.xml");
 		//MockNodeQueryServiceInstanceById("f70e927b-6087-4974-9ef8-c5e4d5847ca4", "CreateNetworkV2/createNetwork_queryInstance_Success.xml", "v8");
 		MockNodeQueryServiceInstanceById("f70e927b-6087-4974-9ef8-c5e4d5847ca4", "CreateNetworkV2/createNetwork_queryInstance_Success.xml");
@@ -156,7 +156,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 		Map<String, String> variables = setupVariables2();
 		//WorkflowResponse workflowResponse = executeAsyncWorkflow(processEngineRule, "CreateNetworkInstance", variables);
 		executeAsyncWorkflow(processEngineRule, "CreateNetworkInstance", variables);
-		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 	    assertEquals("true", getVariable(processEngineRule, "CreateNetworkInstance", "CRENI_Success"));
 	    assertEquals("true", getVariable(processEngineRule, "DoCreateNetworkInstance", "CRENWKI_Success"));
@@ -219,7 +219,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 		Map<String, String> variables = setupVariablesVID1();
 		executeAsyncWorkflow(processEngineRule, "CreateNetworkInstance", variables);
 		//WorkflowResponse workflowResponse = executeAsyncWorkflow(processEngineRule, "CreateNetworkInstance", variables);
-		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 	    assertEquals("false", getVariable(processEngineRule, "CreateNetworkInstance", "CRENI_Success"));
 	    assertEquals("false", getVariable(processEngineRule, "DoCreateNetworkInstance", "CRENWKI_Success"));
@@ -269,7 +269,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 		Map<String, String> variables = setupVariables1();
 		executeAsyncWorkflow(processEngineRule, "CreateNetworkInstance", variables);
 		//WorkflowResponse workflowResponse = executeAsyncWorkflow(processEngineRule, "CreateNetworkInstance", variables);
-		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 	    assertEquals("false", getVariable(processEngineRule, "CreateNetworkInstance", "CRENI_Success"));
 	    assertEquals("false", getVariable(processEngineRule, "DoCreateNetworkInstance", "CRENWKI_Success"));
@@ -308,7 +308,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 		Map<String, String> variables = setupVariables2();
 		//WorkflowResponse workflowResponse = executeAsyncWorkflow(processEngineRule, "CreateNetworkInstance", variables);
 		executeAsyncWorkflow(processEngineRule, "CreateNetworkInstance", variables);
-		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 	    assertEquals("false", getVariable(processEngineRule, "CreateNetworkInstance", "CRENI_Success"));
 	    assertEquals("false", getVariable(processEngineRule, "DoCreateNetworkInstance", "CRENWKI_Success"));
@@ -345,7 +345,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 		Map<String, String> variables = setupVariables2();
 		//WorkflowResponse workflowResponse = executeAsyncWorkflow(processEngineRule, "CreateNetworkInstance", variables);
 		executeAsyncWorkflow(processEngineRule, "CreateNetworkInstance", variables);
-		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 	
 		assertEquals("false", getVariable(processEngineRule, "CreateNetworkInstance", "CRENI_Success"));
 		assertEquals("false", getVariable(processEngineRule, "DoCreateNetworkInstance", "CRENWKI_Success"));
@@ -378,13 +378,13 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 		MockNetworkAdapterPost("CreateNetworkV2/createNetworkResponse_Success.xml", "createNetworkRequest");
 		MockGetNetworkByName("MNS-25180-L-01-dmz_direct_net_1", "CreateNetworkV2/createNetwork_queryName_AAIResponse_Success.xml");
 		MockGetNetworkCloudRegion("CreateNetworkV2/cloudRegion25_AAIResponse_Success.xml", "RDM2WAGPLCP");
-		MockGetNetworkByIdWithDepth("49c86598-f766-46f8-84f8-8d1c1b10f9b4", "CreateNetworkV2/createNetwork_queryNetworkId_AAIResponse_Success.xml", "1");
+		MockGetNetworkByIdWithDepth("49c86598-f766-46f8-84f8-8d1c1b10f9b4", "CreateNetworkV2/createNetwork_queryNetworkId_AAIResponse_Success.xml", "all");
 		MockGetNetworkVpnBinding("CreateNetworkV2/createNetwork_queryVpnBinding_AAIResponse_Success.xml", "85f015d0-2e32-4c30-96d2-87a1a27f8017");
 		MockGetNetworkVpnBinding("CreateNetworkV2/createNetwork_queryVpnBinding_AAIResponse_Success.xml", "c980a6ef-3b88-49f0-9751-dbad8608d0a6");
 		MockGetNetworkPolicy("CreateNetworkV2/createNetwork_queryNetworkPolicy_AAIResponse_Success.xml", "cee6d136-e378-4678-a024-2cd15f0ee0cg");
 		MockGetNetworkTableReference("CreateNetworkV2/createNetwork_queryNetworkTableRef1_AAIResponse_Success.xml", "refFQDN1");
 		MockGetNetworkTableReference("CreateNetworkV2/createNetwork_queryNetworkTableRef2_AAIResponse_Success.xml", "refFQDN2");
-		MockPutNetworkIdWithDepth("CreateNetworkV2/createNetwork_updateContrail_AAIResponse_Success.xml", "49c86598-f766-46f8-84f8-8d1c1b10f9b4", "1");
+		MockPutNetworkIdWithDepth("CreateNetworkV2/createNetwork_updateContrail_AAIResponse_Success.xml", "49c86598-f766-46f8-84f8-8d1c1b10f9b4", "all");
 		MockUpdateRequestDB("DBUpdateResponse.xml");
 		//MockNodeQueryServiceInstanceById("f70e927b-6087-4974-9ef8-c5e4d5847ca4", "CreateNetworkV2/createNetwork_queryInstance_Success.xml", "v8");
 		MockNodeQueryServiceInstanceById("f70e927b-6087-4974-9ef8-c5e4d5847ca4", "CreateNetworkV2/createNetwork_queryInstance_Success.xml");
@@ -395,7 +395,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 		System.out.println("----------------------------------------------------------");
 		System.out.println("- got workflow response -");
 		System.out.println("----------------------------------------------------------");
-		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceID());
+		//waitForWorkflowToFinish(processEngineRule, workflowResponse.getProcessInstanceId());
 
 	    assertEquals("true", getVariable(processEngineRule, "CreateNetworkInstance", "CRENI_Success"));
 	    Assert.assertNotNull("CRENI_CompleteMsoProcessRequest - ", getVariable(processEngineRule, "CreateNetworkInstance", "CRENI_CompleteMsoProcessRequest"));
@@ -430,7 +430,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 
 	// Success Scenario
 	private Map<String, String> setupVariables1() {
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		variables.put("testMessageId", "88f65519-9a38-4c4b-8445-9eb4a5a5af56");
 		variables.put("msoRequestId", "testRequestId");
 		variables.put("requestId", "testRequestId");
@@ -455,7 +455,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 
 	// Success Scenario 2
 	private Map<String, String> setupVariables2() {
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		variables.put("testMessageId", "88f65519-9a38-4c4b-8445-9eb4a5a5af56");
 		variables.put("msoRequestId", "testRequestId");
 		variables.put("serviceInstanceId", "f70e927b-6087-4974-9ef8-c5e4d5847ca4");
@@ -479,7 +479,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 
 	// Active Scenario
 	private Map<String, String> setupVariablesActive() {
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		variables.put("testMessageId", "88f65519-9a38-4c4b-8445-9eb4a5a5af56");
 		variables.put("msoRequestId", "testRequestId");
 		variables.put("serviceInstanceId", "f70e927b-6087-4974-9ef8-c5e4d5847ca4");
@@ -503,7 +503,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 
 	// Missing Name Scenario
 	private Map<String, String> setupVariablesMissingName() {
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		//variables.put("bpmnRequest", getCreateNetworkRequestMissingName());
 		variables.put("testMessageId", "88f65519-9a38-4c4b-8445-9eb4a5a5af56");
 		variables.put("msoRequestId", "testRequestId");
@@ -524,7 +524,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 
 	// SDNC Rollback Scenario
 	private Map<String, String> setupVariablesSDNCRollback() {
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		variables.put("testMessageId", "88f65519-9a38-4c4b-8445-9eb4a5a5af56");
 		variables.put("msoRequestId", "testRequestId");
 		variables.put("serviceInstanceId", "f70e927b-6087-4974-9ef8-c5e4d5847ca4");
@@ -609,7 +609,7 @@ public class CreateNetworkInstanceTest extends WorkflowTest {
 
 	// VID json input
 	private Map<String, String> setupVariablesVID1() {
-		Map<String, String> variables = new HashMap<String, String>();
+		Map<String, String> variables = new HashMap<>();
 		variables.put("bpmnRequest", getCreateNetworkRequestVID1());
 		variables.put("mso-request-id", "testRequestId");
 		//variables.put("msoRequestId", "testRequestId");

@@ -1,6 +1,7 @@
 package org.openecomp.mso.bpmn.common.scripts
 
 import org.camunda.bpm.engine.delegate.BpmnError
+import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.runtime.Execution
 import org.openecomp.mso.rest.APIResponse
 
@@ -19,7 +20,7 @@ class ESRGetVimById extends AbstractServiceTaskProcessor {
     private ExceptionUtil exceptionUtil = new ExceptionUtil()
 
 
-    public void preProcessRequest(Execution execution) {
+    void preProcessRequest(DelegateExecution execution) {
 
         def method = getClass().getSimpleName() + '.preProcessRequest(' + 'execution=' + execution.getId() + ')'
         def isDebugLogEnabled = execution.getVariable('isDebugLogEnabled')

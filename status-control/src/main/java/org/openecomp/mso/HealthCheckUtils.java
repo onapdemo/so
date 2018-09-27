@@ -38,6 +38,7 @@ import javax.ws.rs.core.Response;
 
 public class HealthCheckUtils {
 
+    private static final String HEALTH_CHECK = "HealthCheck";
     private static MsoLogger msoLogger = MsoLogger.getMsoLogger(MsoLogger.Catalog.GENERAL);
     private static final String MSO_PROP_TOPOLOGY = "MSO_PROP_TOPOLOGY";
     private static MsoPropertiesFactory msoPropertiesFactory = new MsoPropertiesFactory();
@@ -54,13 +55,13 @@ public class HealthCheckUtils {
             .entity (NOT_FOUND)
             .build ();
 
-    public enum NodeType {APIH, RA, BPMN};
+    public enum NodeType {APIH, RA, BPMN}
 
     public boolean catalogDBCheck (MsoLogger subMsoLogger, long startTime) {
         try(CatalogDatabase catalogDB = CatalogDatabase.getInstance()) {
             catalogDB.healthCheck ();
         } catch (Exception e) {
-            subMsoLogger.error(MessageEnum.GENERAL_EXCEPTION, "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Failed to check catalog database", e);
+            subMsoLogger.error(MessageEnum.GENERAL_EXCEPTION, "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "Failed to check catalog database", e);
             subMsoLogger.recordAuditEvent (startTime, MsoLogger.StatusCode.ERROR, MsoLogger.ResponseCode.DBAccessError, "Exception during healthcheck");
             return false;
         }
@@ -71,14 +72,14 @@ public class HealthCheckUtils {
         try {
             (RequestsDatabase.getInstance()).healthCheck ();
         } catch (Exception e) {
-            subMsoLogger.error(MessageEnum.GENERAL_EXCEPTION, "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Failed to check request database", e);
+            subMsoLogger.error(MessageEnum.GENERAL_EXCEPTION, "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "Failed to check request database", e);
             subMsoLogger.recordAuditEvent (startTime, MsoLogger.StatusCode.ERROR, MsoLogger.ResponseCode.ServiceNotAvailable, "Exception during local healthcheck");
             return false;
         }
         return true;
     }
 
-    public boolean siteStatusCheck (MsoLogger subMsoLogger, long startTime) {
+    public boolean siteStatusCheck(MsoLogger subMsoLogger) {
         // Check the Site Status value in DB first, if set to false, return NOK
         String site = getProperty("site-name");
 
@@ -107,13 +108,13 @@ public class HealthCheckUtils {
         try {
             msoProperties = msoPropertiesFactory.getMsoJavaProperties(fileName);
         } catch (Exception e) {
-            msoLogger.error (MessageEnum.LOAD_PROPERTIES_FAIL, fileName, "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Failed to load topology properties", e);
+            msoLogger.error (MessageEnum.LOAD_PROPERTIES_FAIL, fileName, "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "Failed to load topology properties", e);
             return null;
         }
         if (msoProperties !=null && msoProperties.size() > 0) {
             return msoProperties;
         } else {
-            msoLogger.error (MessageEnum.NO_PROPERTIES, fileName, "", "HealthCheck", MsoLogger.ErrorCode.DataError, "No topology properties");
+            msoLogger.error (MessageEnum.NO_PROPERTIES, fileName, "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "No topology properties");
             return  null;
         }
     }
@@ -138,8 +139,8 @@ public class HealthCheckUtils {
             }
             msoLogger.debug("verifyLocalHealth - Service not available");
         } catch (Exception e) {
-            msoLogger.error(MessageEnum.GENERAL_EXCEPTION, "", "HealthCheck", MsoLogger.ErrorCode.UnknownError, "Error in local HealthCheck", e);
-            msoLogger.recordMetricEvent (startTime, MsoLogger.StatusCode.ERROR, MsoLogger.ResponseCode.CommunicationError, "Exception while communicate with APIH/BPMN/RA", url, "HealthCheck", null);
+            msoLogger.error(MessageEnum.GENERAL_EXCEPTION, "", HEALTH_CHECK, MsoLogger.ErrorCode.UnknownError, "Error in local HealthCheck", e);
+            msoLogger.recordMetricEvent (startTime, MsoLogger.StatusCode.ERROR, MsoLogger.ResponseCode.CommunicationError, "Exception while communicate with APIH/BPMN/RA", url, HEALTH_CHECK, null);
             msoLogger.debug("Exception while triggering local health check api:" + finalUrl);
         }
         return false;
@@ -161,14 +162,14 @@ public class HealthCheckUtils {
         try {
             msoProperties = msoPropertiesFactory.getMsoJavaProperties(MSO_PROP_TOPOLOGY);
         } catch (Exception e) {
-            msoLogger.error(MessageEnum.LOAD_PROPERTIES_FAIL, MSO_PROP_TOPOLOGY, "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Not able to load topology properties", e);
+            msoLogger.error(MessageEnum.LOAD_PROPERTIES_FAIL, MSO_PROP_TOPOLOGY, "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "Not able to load topology properties", e);
             return null;
         }
 
         if (msoProperties != null && msoProperties.size() > 0) {
             return msoProperties;
         } else {
-            msoLogger.error(MessageEnum.LOAD_PROPERTIES_FAIL, MSO_PROP_TOPOLOGY, "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Not able to load topology properties");
+            msoLogger.error(MessageEnum.LOAD_PROPERTIES_FAIL, MSO_PROP_TOPOLOGY, "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "Not able to load topology properties");
             return null;
         }
     }
@@ -179,95 +180,39 @@ public class HealthCheckUtils {
         if (null == topologyProp) {
             return false;
         }
-        String port = topologyProp.getProperty("server-port", null);
-        String ip = System.getProperty("jboss.qualified.host.name");
-        String sslEnabled = topologyProp.getProperty("ssl-enable", null);
 
-        if (null == port || null == ip || ip.isEmpty() || port.isEmpty()) {
-            msoLogger.error (MessageEnum.GENERAL_EXCEPTION_ARG, "Not able to get the IP or the Port value. IP:" + ip + "; Port:" + port, "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Not able to get the IP or the Port value. IP:" + ip + "; Port:" + port);
-            return false;
+        checkHealthForProperty(topologyProp, "", requestId);
+
+        boolean healthCheck = false;
+        switch (type) {
+            case APIH:
+                healthCheck = checkHealthForProperty(topologyProp, "apih-healthcheck-urn", requestId);
+                break;
+            case RA:
+                healthCheck = checkHealthForProperty(topologyProp, "jra-healthcheck-urn", requestId);
+                break;
+            case BPMN:
+                healthCheck = checkHealthForProperty(topologyProp, "camunda-healthcheck-urn", requestId);
+                break;
+            default:
+                msoLogger.error(MessageEnum.GENERAL_EXCEPTION_ARG, "Unknown NodeType:" + type, "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "Unknown NodeType:" + type);
+                break;
         }
 
-        String[] apis;
-        if (NodeType.APIH.equals (type)) {
-            String apiList = topologyProp.getProperty("apih-healthcheck-urn", null);
-            if (null == apiList) {
-                msoLogger.error (MessageEnum.GENERAL_EXCEPTION_ARG, "Not able to get apih-healthcheck-urn parameter", "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Not able to get apih-healthcheck-urn parameter");
-                return false;
-            }
-            apis = apiList.split(",");
-        } else if (NodeType.RA.equals (type)){
-            String apiList = topologyProp.getProperty("jra-healthcheck-urn", null);
-            if (null == apiList) {
-                msoLogger.error (MessageEnum.GENERAL_EXCEPTION_ARG, "Not able to get jra-healthcheck-urn parameter", "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Not able to get jra-healthcheck-urn parameter");
-                return false;
-            }
-            apis = apiList.split(",");
-        } else if (NodeType.BPMN.equals (type)){
-            String apiList = topologyProp.getProperty("camunda-healthcheck-urn", null);
-            if (null == apiList) {
-                msoLogger.error (MessageEnum.GENERAL_EXCEPTION_ARG, "Not able to get jra-healthcheck-urn parameter", "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Not able to get jra-healthcheck-urn parameter");
-                return false;
-            }
-            apis = apiList.split(",");
-        } else {
-            msoLogger.error (MessageEnum.GENERAL_EXCEPTION_ARG, "Unknown NodeType:" + type, "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Unknown NodeType:" + type);
-            return false;
-        }
-
-        // Verify health check on APIH servers
-        for (String url : apis) {
-            // if any of the parameters is null or empty, no need to establish the health check request, just go to the next iteration
-            if ((url == null)  || url.isEmpty()) {
-                continue;
-            }
-            // Exit the loop if local health check returns false from any of the sub component
-            if (!this.verifyLocalHealth(ip, port, url, sslEnabled, requestId)) {
-                return false;
-            }
-        }
-        return true;
+        return healthCheck;
     }
 
     public boolean verifyGlobalHealthCheck(boolean verifyBpmn, String requestId) {
         // Get info from topology properties file
         MsoJavaProperties topologyProp = this.loadTopologyProperties();
         if (null == topologyProp) {
-            msoLogger.error (MessageEnum.GENERAL_EXCEPTION_ARG, "Not able to find the topology file", "", "HealthCheck", MsoLogger.ErrorCode.PermissionError, "Not able to find the topology file");
+            msoLogger.error (MessageEnum.GENERAL_EXCEPTION_ARG, "Not able to find the topology file", "", HEALTH_CHECK, MsoLogger.ErrorCode.PermissionError, "Not able to find the topology file");
             return false;
         }
 
-        String apihLB = topologyProp.getProperty("apih-load-balancer", null);
-        String apihApi = topologyProp.getProperty("apih-nodehealthcheck-urn", null);
-        String bpmnLB= topologyProp.getProperty("camunda-load-balancer", null);
-        String bpmnApi = topologyProp.getProperty("camunda-nodehealthcheck-urn", null);
-        String jraLB = topologyProp.getProperty("jra-load-balancer", null);
-        String jraApi = topologyProp.getProperty("jra-nodehealthcheck-urn", null);
-
-        if (null == apihLB || null == apihApi || null == bpmnLB || null == bpmnApi || null == jraLB || null == jraApi
-                || apihLB.isEmpty () || apihApi.isEmpty () || bpmnLB.isEmpty () || bpmnApi.isEmpty () || jraLB.isEmpty () || jraApi.isEmpty () ) {
-            msoLogger.error (MessageEnum.GENERAL_EXCEPTION_ARG, "Key parameters are missing from the topology file", "", "HealthCheck", MsoLogger.ErrorCode.DataError, "Key parameters are missing from the topology file");
-            return false;
-        }
-
-        // Verify health check on APIH servers
-        if (!this.verifyLocalHealth (apihLB, null, apihApi, null, requestId)) {
-            return false;
-        }
-
-        // Verify health check on Camunda servers
-        if (verifyBpmn) {
-            if (!this.verifyLocalHealth (bpmnLB, null, bpmnApi, null, requestId)) {
-                return false;
-            }
-        }
-
-        // Verify health check on RA servers
-        if (!verifyLocalHealth (jraLB, null, jraApi, null, requestId)) {
-            return false;
-        }
-
-        return true;
+        return verifyApihServersHealthCheck(topologyProp, requestId) &&
+                verifyCamundaServersHealthCheck(topologyProp, requestId, verifyBpmn) &&
+                verifyRaServersHealthCheck(topologyProp, requestId);
     }
 
     public String getProperty (String name) {
@@ -279,8 +224,8 @@ public class HealthCheckUtils {
     protected String getFinalUrl (String ip, String port, String url, String sslEnabled) {
         if (null == port && null == sslEnabled) {
             int length = ip.length();
-            if (ip.substring(length - 1).equals ("/")) {
-                ip = ip.substring (0, length - 1);
+            if ("/".equals(ip.substring(length - 1))) {
+                ip = ip.substring(0, length - 1);
             }
             return ip + url;
         } else if ("true".equalsIgnoreCase(sslEnabled)) {
@@ -288,5 +233,76 @@ public class HealthCheckUtils {
         } else {
             return "http://" + ip + ":" + port + url;
         }
+    }
+
+    private boolean verifyRaServersHealthCheck(MsoJavaProperties topologyProp, String requestId) {
+        String jraLB = topologyProp.getProperty("jra-load-balancer", null);
+        String jraApi = topologyProp.getProperty("jra-nodehealthcheck-urn", null);
+
+        if (null == jraLB || null == jraApi || jraLB.isEmpty() || jraApi.isEmpty()) {
+            msoLogger.error(MessageEnum.GENERAL_EXCEPTION_ARG, "Key parameters are missing from the topology file", "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "Key parameters are missing from the topology file");
+            return false;
+        }
+
+        return verifyLocalHealth(jraLB, null, jraApi, null, requestId);
+    }
+
+    private boolean verifyCamundaServersHealthCheck(MsoJavaProperties topologyProp, String requestId, boolean verifyBpmn) {
+        String bpmnLB = topologyProp.getProperty("camunda-load-balancer", null);
+        String bpmnApi = topologyProp.getProperty("camunda-nodehealthcheck-urn", null);
+
+        if (null == bpmnLB || null == bpmnApi || bpmnLB.isEmpty() || bpmnApi.isEmpty()) {
+            msoLogger.error(MessageEnum.GENERAL_EXCEPTION_ARG, "Key parameters are missing from the topology file", "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "Key parameters are missing from the topology file");
+            return false;
+        }
+
+        return !verifyBpmn || verifyLocalHealth(bpmnLB, null, bpmnApi, null, requestId);
+    }
+
+    private boolean verifyApihServersHealthCheck(MsoJavaProperties topologyProp, String requestId) {
+        String apihLB = topologyProp.getProperty("apih-load-balancer", null);
+        String apihApi = topologyProp.getProperty("apih-nodehealthcheck-urn", null);
+
+        if (null == apihLB || null == apihApi || apihLB.isEmpty() || apihApi.isEmpty()) {
+            msoLogger.error(MessageEnum.GENERAL_EXCEPTION_ARG, "Key parameters are missing from the topology file", "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "Key parameters are missing from the topology file");
+            return false;
+        }
+
+        return verifyLocalHealth(apihLB, null, apihApi, null, requestId);
+    }
+
+    private boolean checkHealthForProperty(MsoJavaProperties topologyProp, String property, String requestId) {
+        String apiList = topologyProp.getProperty(property, null);
+        if (apiList == null) {
+            String errorDescription = "Not able to get " + property + " parameter";
+            msoLogger.error(MessageEnum.GENERAL_EXCEPTION_ARG, errorDescription, "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, errorDescription);
+            return false;
+        }
+        String[] apis = apiList.split(",");
+        return checkHealthForEachApi(topologyProp, apis, requestId);
+    }
+
+    private boolean checkHealthForEachApi(MsoJavaProperties topologyProp, String[] apis, String requestId) {
+
+        String port = topologyProp.getProperty("server-port", null);
+        String ip = System.getProperty("jboss.qualified.host.name");
+        String sslEnabled = topologyProp.getProperty("ssl-enable", null);
+
+        if (null == port || null == ip || ip.isEmpty() || port.isEmpty()) {
+            msoLogger.error(MessageEnum.GENERAL_EXCEPTION_ARG, "Not able to get the IP or the Port value. IP:" + ip + "; Port:" + port, "", HEALTH_CHECK, MsoLogger.ErrorCode.DataError, "Not able to get the IP or the Port value. IP:" + ip + "; Port:" + port);
+            return false;
+        }
+
+        for (String url : apis) {
+            // if any of the parameters is null or empty, no need to establish the health check request, just go to the next iteration
+            if ((url == null) || url.isEmpty()) {
+                continue;
+            }
+            // Exit the loop if local health check returns false from any of the sub component
+            if (!this.verifyLocalHealth(ip, port, url, sslEnabled, requestId)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

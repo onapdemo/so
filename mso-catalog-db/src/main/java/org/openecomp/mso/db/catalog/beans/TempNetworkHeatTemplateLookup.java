@@ -22,25 +22,29 @@ package org.openecomp.mso.db.catalog.beans;
 
 import java.io.Serializable;
 
+import com.openpojo.business.annotation.BusinessKey;
+
 public class TempNetworkHeatTemplateLookup implements Serializable {
-	
-	private String networkResourceModelName;
-	private String heatTemplateArtifactUuid;
-	private String aicVersionMin;
-	private String aicVersionMax;
+
+	@BusinessKey
+	private String networkResourceModelName = null;
+	@BusinessKey
+	private String heatTemplateArtifactUuid = null;
+	private String aicVersionMin = null;
+	private String aicVersionMax = null;
     public static final long serialVersionUID = -1322322139926390329L;
 
 	public TempNetworkHeatTemplateLookup() {
 		super();
 	}
-	
+
 	public String getNetworkResourceModelName() {
 		return this.networkResourceModelName;
 	}
 	public void setNetworkResourceModelName(String networkResourceModelName) {
 		this.networkResourceModelName = networkResourceModelName;
 	}
-	
+
 	public String getHeatTemplateArtifactUuid() {
 		return this.heatTemplateArtifactUuid;
 	}
@@ -50,29 +54,26 @@ public class TempNetworkHeatTemplateLookup implements Serializable {
 	public String getAicVersionMin() {
 		return this.aicVersionMin;
 	}
-	
+
 	public void setAicVersionMin(String aicVersionMin) {
 		this.aicVersionMin = aicVersionMin;
 	}
-	
+
 	public String getAicVersionMax() {
 		return this.aicVersionMax;
 	}
-	
+
 	public void setAicVersionMax(String aicVersionMax) {
 		this.aicVersionMax = aicVersionMax;
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("NetworkResourceModelName=" + this.networkResourceModelName);
-		sb.append("HeatTemplateArtifactUuid=" + this.heatTemplateArtifactUuid);
-		sb.append("aicVersionMin=" + this.aicVersionMin);
-		sb.append("aicVersionMax=" + this.aicVersionMax);
-		return sb.toString();
+		return "NetworkResourceModelName=" + this.networkResourceModelName + "HeatTemplateArtifactUuid=" +
+			this.heatTemplateArtifactUuid + "aicVersionMin=" + this.aicVersionMin + "aicVersionMax=" + this.aicVersionMax;
 	}
-    @Override
+
+	@Override
     public boolean equals (Object o) {
         if (!(o instanceof TempNetworkHeatTemplateLookup)) {
             return false;

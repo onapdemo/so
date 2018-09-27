@@ -2,6 +2,7 @@ package org.openecomp.mso.bpmn.common.scripts
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.camunda.bpm.engine.delegate.BpmnError
+import org.camunda.bpm.engine.delegate.DelegateExecution
 import org.camunda.bpm.engine.runtime.Execution
 import org.openecomp.mso.bpmn.core.json.JsonUtils
 import org.openecomp.mso.client.has.entities.HASRequest
@@ -32,8 +33,7 @@ class HAService extends AbstractServiceTaskProcessor {
         }
     }
 
-    @Override
-    void preProcessRequest(Execution execution) {
+    void preProcessRequest(DelegateExecution execution) {
 
         def method = getClass().getSimpleName() + '.preProcessRequest(' + 'execution=' + execution.getId() + ')'
         def isDebugLogEnabled = execution.getVariable('isDebugLogEnabled')

@@ -29,19 +29,21 @@ public class AllottedResourceCustomization extends MavenLikeVersioning implement
 	
 	private static final long serialVersionUID = 768026109321305392L;
 
-	private String modelCustomizationUuid;
-	private String arModelUuid;
-	private Timestamp created;
-	private String modelInstanceName;
-	private String providingServiceModelInvariantUuid;
-	private String targetNetworkRole;
-	private String nfFunction;
-	private String nfType;
-	private String nfRole;
-	private String nfNamingCode;
+	private String modelCustomizationUuid = null;
+	private String arModelUuid = null;
+	private Timestamp created = null;
+	private String modelInstanceName = null;
+	private String providingServiceModelInvariantUuid = null;
+	private String targetNetworkRole = null;
+	private String nfFunction = null;
+	private String nfType = null;
+	private String nfRole = null;
+	private String nfNamingCode = null;
 	private Integer minInstances;
 	private Integer maxInstances;
-	private AllottedResource ar = null;
+	private AllottedResource allottedResource = null;
+	private String providingServiceModelUuid = null;
+	private String providingServiceModelName = null;
 
 	public AllottedResourceCustomization() {
 		super();
@@ -75,10 +77,10 @@ public class AllottedResourceCustomization extends MavenLikeVersioning implement
 		this.modelInstanceName = modelInstanceName;
 	}
 	public AllottedResource getAllottedResource() {
-		return this.ar;
+		return this.allottedResource;
 	}
 	public void setAllottedResource(AllottedResource ar) {
-		this.ar = ar;
+		this.allottedResource = ar;
 	}
 	public String getProvidingServiceModelInvariantUuid() {
 		return this.providingServiceModelInvariantUuid;
@@ -128,22 +130,26 @@ public class AllottedResourceCustomization extends MavenLikeVersioning implement
 	public void setMaxInstances(Integer maxInstances) {
 		this.maxInstances = maxInstances;
 	}
+	public String getProvidingServiceModelUuid() {
+		return this.providingServiceModelUuid;
+	}
+	public void setProvidingServiceModelUuid(String providingServiceModelUuid) {
+		this.providingServiceModelUuid = providingServiceModelUuid;
+	}
+	public String getProvidingServiceModelName() {
+		return this.providingServiceModelName;
+	}
+	public void setProvidingServiceModelName(String providingServiceModelName) {
+		this.providingServiceModelName = providingServiceModelName;
+	}
 
 	@Override
 	public String toString () {
-		StringBuffer sb = new StringBuffer();
-		sb.append("modelCustomizationUuid=");
-		sb.append(this.modelCustomizationUuid);
-		sb.append(",modelInstanceName=");
-		sb.append(this.modelInstanceName);
-		sb.append(",modelInstanceName=");
-		sb.append(this.modelInstanceName);
-		sb.append(",created=");
-		sb.append(this.created);
-		sb.append(",ar=");
-		sb.append(this.ar);
-
-		return sb.toString();
+		return "modelCustomizationUuid=" + this.modelCustomizationUuid +
+			",modelInstanceName=" + this.modelInstanceName +
+			",modelInstanceName=" + this.modelInstanceName +
+			",created=" + this.created +
+			",ar=" + this.allottedResource;
 	}
 
 }
